@@ -20,7 +20,7 @@ export function Features() {
   return (
     <section id="features" className="py-24 relative">
       {/* Ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse,_rgba(212,168,83,0.04)_0%,_transparent_70%)] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse,rgba(212,168,83,0.04)_0%,transparent_70%)] pointer-events-none" />
 
       <div className="max-container relative z-10">
         <div className="text-center mb-16">

@@ -6,7 +6,7 @@ export function Hero({ heroImageUrl }: { heroImageUrl: string }) {
     <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden">
       {/* Warm ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse,_rgba(212,168,83,0.1)_0%,_transparent_70%)]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse,rgba(212,168,83,0.1)_0%,transparent_70%)]" />
         <div className="absolute top-[30%] left-[15%] w-72 h-72 bg-primary/5 blur-[120px] rounded-full" />
         <div className="absolute top-[20%] right-[15%] w-64 h-64 bg-primary/3 blur-[100px] rounded-full" />
       </div>
@@ -54,7 +54,7 @@ export function Hero({ heroImageUrl }: { heroImageUrl: string }) {
 
         {/* Hero Image */}
         <div className="relative w-full max-w-5xl mx-auto fade-in rounded-2xl overflow-hidden border border-border" style={{ animationDelay: "500ms" }}>
-          <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-t from-bg via-transparent to-transparent z-10 pointer-events-none" />
           <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.4)] z-10 pointer-events-none rounded-2xl" />
           <Image 
             src={heroImageUrl} 

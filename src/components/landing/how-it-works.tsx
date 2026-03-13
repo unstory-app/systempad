@@ -28,7 +28,7 @@ export function HowItWorks() {
 
         <div className="relative">
           {/* Timeline Line */}
-          <div className="hidden md:block absolute top-[28px] left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-border-accent to-transparent -z-0" />
+          <div className="hidden md:block absolute top-[28px] left-[10%] right-[10%] h-px bg-linear-to-r from-transparent via-border-accent to-transparent z-0" />
           
           <div className="grid md:grid-cols-3 gap-12 relative z-10">
             {steps.map((step, i) => (
