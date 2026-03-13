@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { StackProvider, StackTheme } from "@stackframe/stack";
+import { StackProvider } from "@stackframe/stack";
 import { stackClientApp } from "../stack/client";
-import { Inter, Outfit, Geist_Mono } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,14 +16,9 @@ const outfit = Outfit({
 	display: "swap",
 });
 
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-	title: "SystemPad | Design Scalable System Architectures in Minutes",
-	description: "Infinite canvas, real-time collaboration, ready architecture components, and AI-generated diagrams. The fastest way to design engineering systems.",
+	title: "SystemPad | Design Scalable System Architectures",
+	description: "The fastest way to design, document, and share system architectures.",
 };
 
 export default function RootLayout({
@@ -32,11 +27,15 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className="dark">
+		<html lang="en" style={{ colorScheme: "light" }}>
 			<head>
 				<link rel="icon" href="/favicon.svg" type="image/svg+xml"></link>
 			</head>
-			<body className={`${inter.variable} ${outfit.variable} ${geistMono.variable} antialiased`}><StackProvider app={stackClientApp}><StackTheme>{children}</StackTheme></StackProvider></body>
+			<body className={`${inter.variable} ${outfit.variable} antialiased bg-white text-zinc-900`}>
+				<StackProvider app={stackClientApp}>
+					{children}
+				</StackProvider>
+			</body>
 		</html>
 	);
 }

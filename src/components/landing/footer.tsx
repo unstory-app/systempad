@@ -2,60 +2,47 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="bg-bg border-t border-border-subtle pt-20 pb-10">
+    <footer className="border-t border-zinc-100 pt-16 pb-8">
       <div className="max-container">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-12 mb-16">
-          <div className="col-span-2">
-            <div className="flex items-center gap-2.5 mb-6">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-lg">
-                S
-              </div>
-              <span className="font-display font-bold text-xl tracking-tight text-fg">SystemPad</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">S</div>
+              <span className="font-display font-bold text-lg">SystemPad</span>
             </div>
-            <p className="text-fg-subtle text-sm max-w-xs leading-relaxed mb-8">
-              The fastest way to design, document, and collaborate on system architectures. Built for the modern engineering stack.
+            <p className="text-zinc-400 text-sm leading-relaxed max-w-[200px]">
+              Design and share system architectures.
             </p>
-            <div className="flex gap-4 items-center">
-               <Link href="https://twitter.com" className="text-fg-subtle hover:text-primary transition-colors duration-300">Twitter</Link>
-               <Link href="https://github.com" className="text-fg-subtle hover:text-fg transition-colors duration-300">GitHub</Link>
-            </div>
           </div>
-          
+
           <div>
-            <h4 className="font-bold mb-6 text-sm text-fg">Product</h4>
-            <ul className="space-y-4 text-sm text-fg-subtle">
-              <li><Link href="#features" className="hover:text-primary transition-colors duration-300">Features</Link></li>
-              <li><Link href="#pricing" className="hover:text-primary transition-colors duration-300">Pricing</Link></li>
-              <li><Link href="/docs" className="hover:text-primary transition-colors duration-300">Documentation</Link></li>
+            <h4 className="font-bold text-sm mb-4">Product</h4>
+            <ul className="space-y-2 text-sm text-zinc-500">
+              <li><Link href="#features" className="hover:text-zinc-900 transition-colors">Features</Link></li>
+              <li><Link href="#pricing" className="hover:text-zinc-900 transition-colors">Pricing</Link></li>
+              <li><Link href="#templates" className="hover:text-zinc-900 transition-colors">Templates</Link></li>
             </ul>
           </div>
-          
+
           <div>
-            <h4 className="font-bold mb-6 text-sm text-fg">Resources</h4>
-            <ul className="space-y-4 text-sm text-fg-subtle">
-              <li><Link href="#templates" className="hover:text-primary transition-colors duration-300">Templates</Link></li>
-              <li><Link href="/blog" className="hover:text-primary transition-colors duration-300">Blog</Link></li>
-              <li><Link href="/gallery" className="hover:text-primary transition-colors duration-300">Public Gallery</Link></li>
+            <h4 className="font-bold text-sm mb-4">Resources</h4>
+            <ul className="space-y-2 text-sm text-zinc-500">
+              <li><Link href="/docs" className="hover:text-zinc-900 transition-colors">Docs</Link></li>
+              <li><Link href="/blog" className="hover:text-zinc-900 transition-colors">Blog</Link></li>
             </ul>
           </div>
-          
+
           <div>
-            <h4 className="font-bold mb-6 text-sm text-fg">Company</h4>
-            <ul className="space-y-4 text-sm text-fg-subtle">
-              <li><Link href="/about" className="hover:text-primary transition-colors duration-300">About Us</Link></li>
-              <li><Link href="/privacy" className="hover:text-primary transition-colors duration-300">Privacy</Link></li>
-              <li><Link href="/terms" className="hover:text-primary transition-colors duration-300">Terms</Link></li>
+            <h4 className="font-bold text-sm mb-4">Connect</h4>
+            <ul className="space-y-2 text-sm text-zinc-500">
+              <li><Link href="https://twitter.com" className="hover:text-zinc-900 transition-colors">Twitter</Link></li>
+              <li><Link href="https://github.com" className="hover:text-zinc-900 transition-colors">GitHub</Link></li>
             </ul>
           </div>
         </div>
-        
-        <div className="pt-8 border-t border-border-subtle text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-fg-subtle text-xs">
-            © {new Date().getFullYear()} SystemPad. All rights reserved.
-          </p>
-          <div className="flex gap-6 text-xs text-fg-subtle">
-            <span>Made with ❤️ for engineers</span>
-          </div>
+
+        <div className="pt-6 border-t border-zinc-100 text-center">
+          <p className="text-zinc-400 text-xs">© {new Date().getFullYear()} SystemPad</p>
         </div>
       </div>
     </footer>
