@@ -1,26 +1,295 @@
 @import "tailwindcss";
 
+/* ─── Design System Theme Tokens ────────────────────────────────────────────
+ * Central theme definition — all components reference these variables.
+ * Mirrors the token structure in src/lib/design-tokens.ts.
+ * Inspired by shadcn/ui's CSS variable approach.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Outfit", system-ui, -apple-system, sans-serif;
+
+  /* Primary accent — warm gold/amber */
+  --color-primary: #D4A853;
+  --color-primary-hover: #E0BB6A;
+  --color-primary-muted: rgba(212, 168, 83, 0.15);
+  --color-primary-foreground: #0A0A0B;
+
+  /* Backgrounds */
+  --color-bg: #0A0A0B;
+  --color-bg-secondary: #111113;
+  --color-bg-elevated: #141415;
+
+  /* Foregrounds */
+  --color-fg: #F5F5F5;
+  --color-fg-muted: #A1A1AA;
+  --color-fg-subtle: #71717A;
+
+  /* Card surfaces */
+  --color-card: #141415;
+  --color-card-hover: #1A1A1C;
+  --color-card-fg: #E5E5E5;
+
+  /* Borders */
+  --color-border: #27272A;
+  --color-border-subtle: #1F1F22;
+  --color-border-hover: #3F3F46;
+  --color-border-accent: rgba(212, 168, 83, 0.3);
+
+  /* Muted */
+  --color-muted: #27272A;
+  --color-muted-fg: #A1A1AA;
+
+  /* Secondary */
+  --color-secondary: #1A1A1C;
+  --color-secondary-hover: #222224;
+
+  /* Status */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-destructive: #EF4444;
+
+  /* Ring / Focus */
+  --color-ring: #D4A853;
+
+  /* Breakpoints */
+  --breakpoint-xs: 475px;
+}
+
 :root {
-	--background: #ffffff;
-	--foreground: #171717;
+  --background: #0A0A0B;
+  --foreground: #F5F5F5;
+  color-scheme: dark;
 }
 
-@theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--font-sans: var(--font-geist-sans);
-	--font-mono: var(--font-geist-mono);
-}
+/* ─── Base Styles ───────────────────────────────────────────────────────── */
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--background: #0a0a0a;
-		--foreground: #ededed;
-	}
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-	background: var(--background);
-	color: var(--foreground);
-	font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+/* ─── Layout Utilities ──────────────────────────────────────────────────── */
+
+.max-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ─── Glass / Glassmorphism ─────────────────────────────────────────────── */
+
+.glass {
+  background: rgba(10, 10, 11, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-card {
+  background: rgba(20, 20, 21, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(26, 26, 28, 0.7);
+  border-color: rgba(212, 168, 83, 0.15);
+  box-shadow: 0 0 30px rgba(212, 168, 83, 0.06);
+}
+
+/* ─── Button System ─────────────────────────────────────────────────────── */
+
+.btn-primary {
+  background: linear-gradient(135deg, #D4A853 0%, #C49B45 100%);
+  color: #0A0A0B;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(212, 168, 83, 0.15);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #E0BB6A 0%, #D4A853 100%);
+  box-shadow: 0 0 30px rgba(212, 168, 83, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F5F5F5;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+/* ─── Card System ───────────────────────────────────────────────────────── */
+
+.card-elevated {
+  background: #141415;
+  border: 1px solid #27272A;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-elevated:hover {
+  border-color: rgba(212, 168, 83, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(212, 168, 83, 0.05);
+  transform: translateY(-2px);
+}
+
+/* ─── Badge / Pill ──────────────────────────────────────────────────────── */
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  background: rgba(212, 168, 83, 0.1);
+  border: 1px solid rgba(212, 168, 83, 0.2);
+  color: #D4A853;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+/* ─── Text Gradient ─────────────────────────────────────────────────────── */
+
+.text-gradient {
+  background: linear-gradient(135deg, #F5F5F5 30%, #D4A853 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gold {
+  color: #D4A853;
+}
+
+/* ─── Section Backgrounds ───────────────────────────────────────────────── */
+
+.section-dark {
+  background: #0A0A0B;
+}
+
+.section-elevated {
+  background: #111113;
+}
+
+/* ─── Ambient Glow Effects ──────────────────────────────────────────────── */
+
+.glow-gold {
+  position: relative;
+}
+
+.glow-gold::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(212, 168, 83, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Animations ────────────────────────────────────────────────────────── */
+
+.fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes warmPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.animate-float {
+  animation: subtleFloat 4s ease-in-out infinite;
+}
+
+/* ─── Scrollbar (Webkit) ────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0B;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272A;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3F3F46;
+}
+
+/* ─── Selection ─────────────────────────────────────────────────────────── */
+
+::selection {
+  background: rgba(212, 168, 83, 0.25);
+  color: #F5F5F5;
 }
