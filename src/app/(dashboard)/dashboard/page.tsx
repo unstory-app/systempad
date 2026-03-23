@@ -96,7 +96,7 @@ export default function DashboardPage() {
 
           {boards?.map((board) => (
             <Card key={board.id} className="group border border-border rounded-xl overflow-hidden hover:border-foreground transition-all bg-card">
-              <Link href={`/board/${board.id}`} className="block relative aspect-4/3 overflow-hidden border-b border-border bg-accent/20">
+              <Link href={`/dashboard/board/${board.id}`} className="block relative aspect-4/3 overflow-hidden border-b border-border bg-accent/20">
                 {board.thumbnailUrl ? (
                   <img 
                     src={board.thumbnailUrl} 
@@ -111,7 +111,7 @@ export default function DashboardPage() {
               </Link>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-1">
-                  <Link href={`/board/${board.id}`} className="text-[14px] font-medium text-foreground hover:underline underline-offset-4 decoration-1 decoration-foreground/30 truncate pr-2">
+                  <Link href={`/dashboard/board/${board.id}`} className="text-[14px] font-medium text-foreground hover:underline underline-offset-4 decoration-1 decoration-foreground/30 truncate pr-2">
                     {board.title}
                   </Link>
                   <DropdownMenu>

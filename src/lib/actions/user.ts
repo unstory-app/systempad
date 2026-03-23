@@ -10,9 +10,34 @@ export async function syncUser(stackUser: any) {
   // 1. Check if user exists
   const existingUser = await db.query.users.findFirst({
     where: eq(users.email, stackUser.primaryEmail),
+    with: {
+      workspaces: true,
+    },
   });
 
   if (existingUser) {
+    if (existingUser.workspaces.length === 0) {
+      // Backfill a default workspace for legacy users without one.
+      const [workspace] = await db.insert(workspaces).values({
+        name: "My Workspace",
+        slug: `ws-${existingUser.id.toString().slice(0, 8)}`,
+        ownerId: existingUser.id,
+      }).returning();
+
+      await db.insert(workspaceMembers).values({
+        workspaceId: workspace.id,
+        userId: existingUser.id,
+        role: "owner",
+      });
+
+      return await db.query.users.findFirst({
+        where: eq(users.id, existingUser.id),
+        with: {
+          workspaces: true,
+        },
+      });
+    }
+
     return existingUser;
   }
 
@@ -37,7 +62,12 @@ export async function syncUser(stackUser: any) {
     role: "owner",
   });
 
-  return newUser;
+  return await db.query.users.findFirst({
+    where: eq(users.id, newUser.id),
+    with: {
+      workspaces: true,
+    },
+  });
 }
 
 export async function getCurrentUser(email: string) {
