@@ -133,7 +133,8 @@ export function EditorClient({ board }: EditorClientProps) {
           initialData={{
             elements: board.snapshotJson?.elements || [],
             appState: {
-               ...board.snapshotJson?.appState,
+               // Defensive: remove properties that shouldn't be restored or have incompatible types (like Map)
+               ...(({ collaborators, ...rest }: any) => rest)(board.snapshotJson?.appState || {}),
                theme: theme === 'dark' ? 'dark' : 'light',
                viewBackgroundColor: theme === 'dark' ? '#09090b' : '#ffffff',
             },
