@@ -21,19 +21,23 @@ export const metadata: Metadata = {
 	description: "The fastest way to design, document, and share system architectures.",
 };
 
+import { ThemeProvider } from "@/components/theme-provider";
+
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" style={{ colorScheme: "light" }}>
+		<html lang="en">
 			<head>
 				<link rel="icon" href="/favicon.svg" type="image/svg+xml"></link>
 			</head>
-			<body className={`${inter.variable} ${outfit.variable} antialiased bg-white text-zinc-900`}>
+			<body className={`${inter.variable} ${outfit.variable} antialiased bg-background text-foreground`}>
 				<StackProvider app={stackClientApp}>
-					{children}
+					<ThemeProvider>
+						{children}
+					</ThemeProvider>
 				</StackProvider>
 			</body>
 		</html>

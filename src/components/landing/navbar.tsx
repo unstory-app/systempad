@@ -1,35 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { UserButton, useUser } from "@stackframe/stack";
+import { useUser } from "@stackframe/stack";
+import { ThemeToggle } from "../theme-toggle";
 
 export function Navbar() {
   const user = useUser();
 
   return (
-    <nav className="sticky top-0 z-50 glass">
-      <div className="max-container h-16 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 bg-background border-b border-border">
+      <div className="max-container h-14 flex items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-            S
-          </div>
-          <span className="font-display font-bold text-xl tracking-tight">SystemPad</span>
+          <span className="font-display font-medium text-xl tracking-tight">SystemPad</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-500">
-          <Link href="#features" className="hover:text-zinc-900 transition-colors">Features</Link>
-          <Link href="#templates" className="hover:text-zinc-900 transition-colors">Templates</Link>
-          <Link href="#pricing" className="hover:text-zinc-900 transition-colors">Pricing</Link>
+        <div className="hidden md:flex items-center gap-6 text-[13px] font-medium text-muted-foreground">
+          <Link href="#product" className="hover:text-foreground transition-colors">Product</Link>
+          <Link href="#resources" className="hover:text-foreground transition-colors">Resources</Link>
+          <Link href="#pricing" className="hover:text-foreground transition-colors">Pricing</Link>
         </div>
 
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {user ? (
-            <UserButton />
+            <Link href="/dashboard" className="text-[13px] font-medium hover:text-foreground transition-colors">Dashboard</Link>
           ) : (
             <>
-              <Link href="/handler/sign-in" className="hidden sm:block text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Log in</Link>
-              <Link href="/handler/sign-up" className="btn-primary py-2 px-5 text-sm">
-                Start Designing
+              <Link href="/handler/sign-in" className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors">Log in</Link>
+              <Link href="/handler/sign-up" className="btn-primary py-1.5 px-4 text-xs">
+                Start for free
               </Link>
             </>
           )}
