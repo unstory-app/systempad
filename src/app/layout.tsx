@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -40,7 +41,9 @@ export default function RootLayout({
 			<body className={`${inter.variable} ${outfit.variable} antialiased bg-background text-foreground`}>
 				<StackProvider app={stackClientApp}>
 					<ThemeProvider>
-						{children}
+						<TooltipProvider>
+							{children}
+						</TooltipProvider>
 					</ThemeProvider>
 				</StackProvider>
 			</body>

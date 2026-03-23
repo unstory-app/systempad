@@ -1,126 +1,141 @@
+"use client";
+
+import { useUser } from "@stackframe/stack";
+import { Plus, MoreVertical, LayoutGrid, Clock, Sparkles } from "lucide-react";
+import useSWR from "swr";
+import { createBoard, deleteBoard, getBoardsByWorkspace } from "@/lib/actions/board";
+import { syncUser } from "@/lib/actions/user";
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { Plus, MoreVertical, LayoutGrid, List, Clock, FolderOpen, Box } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function DashboardPage() {
-  const boards = [
-    { 
-      id: "1", 
-      title: "Microservices Architecture", 
-      updatedAt: "2h ago", 
-      thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-      tag: "Engineering"
-    },
-    { 
-      id: "2", 
-      title: "Next.js 16 Auth Flow", 
-      updatedAt: "Yesterday", 
-      thumbnail: "https://images.unsplash.com/photo-1558494949-ef010ca68a0a?w=800&q=80",
-      tag: "Work"
-    },
-    { 
-      id: "3", 
-      title: "Kubernetes Cluster Map", 
-      updatedAt: "Oct 12", 
-      thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
-      tag: "Infra"
-    },
-    { 
-      id: "4", 
-      title: "User Profile State Machine", 
-      updatedAt: "Oct 8", 
-      thumbnail: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80",
-      tag: "Design"
-    },
-  ];
+  const stackUser = useUser();
+  const [dbUser, setDbUser] = useState<any>(null); // TODO: Define User type from schema
+  const workspaceId = dbUser?.workspaces?.[0]?.id;
+  const { data: boards, error, isLoading, mutate } = useSWR(
+    workspaceId ? `boards-${workspaceId}` : null,
+    () => getBoardsByWorkspace(workspaceId!)
+  );
+
+  useEffect(() => {
+    if (stackUser) {
+      syncUser(stackUser).then(u => setDbUser(u));
+    }
+  }, [stackUser]);
+
+  const handleCreateBoard = async () => {
+    if (!dbUser?.workspaces?.[0]?.id) return;
+    await createBoard(dbUser.workspaces[0].id, dbUser.id, "New System Architecture");
+    mutate();
+  };
+
+  const handleDeleteBoard = async (id: string) => {
+    await deleteBoard(id);
+    mutate();
+  };
+
+  if (isLoading || !dbUser) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-10">
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-[240px] rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-3xl font-display font-medium tracking-tight">Boards</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage and design your system architectures.</p>
         </div>
         
         <div className="flex items-center gap-4">
-           <div className="flex items-center border border-border rounded-md p-1">
-            <button className="p-1.5 rounded-sm bg-accent text-foreground">
-               <LayoutGrid className="w-4 h-4" />
-             </button>
-             <button className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-               <List className="w-4 h-4" />
-             </button>
-           </div>
-           
-           <button className="btn-primary">
-             <Plus className="w-4 h-4 mr-2" />
-             New Board
-           </button>
+           <Button variant="outline" size="icon" className="h-9 w-9">
+              <LayoutGrid className="w-4 h-4" />
+           </Button>
+           <Button variant="default" className="h-9 font-bold px-4" onClick={handleCreateBoard}>
+              <Plus className="w-4 h-4 mr-2" />
+              New Board
+           </Button>
         </div>
       </div>
 
-      {/* Basic Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="border border-border p-6 rounded-xl hover:border-foreground transition-colors group">
-          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Total</p>
-          <div className="flex items-end justify-between">
-            <h3 className="text-3xl font-display font-medium">12</h3>
-            <FolderOpen className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+      {boards?.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-2xl bg-accent/10">
+          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-4">
+            <Sparkles className="w-6 h-6 text-foreground" />
           </div>
+          <h3 className="text-xl font-medium mb-1">No boards yet</h3>
+          <p className="text-sm text-muted-foreground mb-8">Create your first system architecture diagram.</p>
+          <Button onClick={handleCreateBoard} className="font-bold">
+            Create First Board
+          </Button>
         </div>
-        
-        <div className="border border-border p-6 rounded-xl hover:border-foreground transition-colors group">
-          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Active</p>
-          <div className="flex items-end justify-between">
-            <h3 className="text-3xl font-display font-medium">4</h3>
-            <Clock className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </div>
-        </div>
-        
-        <div className="border border-border p-6 rounded-xl hover:border-foreground transition-colors group">
-          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Storage</p>
-          <div className="flex items-end justify-between">
-            <h3 className="text-3xl font-display font-medium">2.4<span className="text-sm ml-1 text-muted-foreground">GB</span></h3>
-            <Box className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </div>
-        </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <button 
+            onClick={handleCreateBoard}
+            className="h-[240px] border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-3 text-muted-foreground hover:border-foreground hover:text-foreground hover:bg-accent/30 transition-all group"
+          >
+            <Plus className="w-6 h-6 transition-transform group-hover:rotate-90 group-hover:scale-110" />
+            <span className="text-[13px] font-medium">New board</span>
+          </button>
 
-      {/* Boards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {/* Create New Card */}
-        <button className="h-[240px] border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-3 text-muted-foreground hover:border-foreground hover:text-foreground hover:bg-accent/30 transition-all group">
-          <Plus className="w-6 h-6 transition-transform group-hover:rotate-90 group-hover:scale-110" />
-          <span className="text-[13px] font-medium">New board</span>
-        </button>
-
-        {boards.map((board) => (
-          <div key={board.id} className="group border border-border rounded-xl overflow-hidden hover:border-foreground transition-all">
-            <Link href={`/board/${board.id}`} className="block relative aspect-video overflow-hidden border-b border-border bg-accent/20">
-              <img 
-                src={board.thumbnail} 
-                className="w-full h-full object-cover grayscale opacity-80 transition-all group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105" 
-                alt={board.title}
-              />
-              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-sm bg-background/80 backdrop-blur-sm border border-border text-[10px] font-bold text-foreground">
-                {board.tag}
-              </div>
-            </Link>
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-1">
-                <Link href={`/board/${board.id}`} className="text-[14px] font-medium text-foreground hover:underline underline-offset-4 decoration-1 decoration-foreground/30 truncate pr-2">
-                  {board.title}
-                </Link>
-                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                  <MoreVertical className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>{board.updatedAt}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+          {boards?.map((board) => (
+            <Card key={board.id} className="group border border-border rounded-xl overflow-hidden hover:border-foreground transition-all bg-card">
+              <Link href={`/board/${board.id}`} className="block relative aspect-4/3 overflow-hidden border-b border-border bg-accent/20">
+                {board.thumbnailUrl ? (
+                  <img 
+                    src={board.thumbnailUrl} 
+                    className="w-full h-full object-cover grayscale opacity-80 transition-all group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105" 
+                    alt={board.title}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-accent/10">
+                    <LayoutGrid className="w-8 h-8 text-muted-foreground opacity-20" />
+                  </div>
+                )}
+              </Link>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-1">
+                  <Link href={`/board/${board.id}`} className="text-[14px] font-medium text-foreground hover:underline underline-offset-4 decoration-1 decoration-foreground/30 truncate pr-2">
+                    {board.title}
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </Button>
+                    } />
+                    <DropdownMenuContent align="end" className="p-1">
+                      <DropdownMenuItem className="text-[13px]" onClick={() => handleDeleteBoard(board.id)}>
+                        Delete Board
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-2">
+                  <Clock className="w-3 h-3" />
+                  <span>{new Date(board.updatedAt).toLocaleDateString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
