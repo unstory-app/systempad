@@ -1,20 +1,112 @@
 "use client";
 
-import { Tldraw } from "tldraw";
+import { Editor, Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Sparkles, Save, Share2, Download, Settings } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import useSWR from "swr";
+import { getBoardById, updateBoardSnapshot } from "@/lib/actions/board";
 
-export function Canvas() {
+type CanvasProps = {
+  boardId: string;
+};
+
+export function Canvas({ boardId }: CanvasProps) {
   const [showAi, setShowAi] = useState(false);
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const { data: board, mutate } = useSWR(`board-${boardId}`, () => getBoardById(boardId));
+  const isSnapshotLoaded = useRef(false);
+  const lastSavedSnapshot = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!editor || !board || isSnapshotLoaded.current) return;
+
+    if (board.snapshotJson) {
+      editor.loadSnapshot(board.snapshotJson as any);
+      try {
+        lastSavedSnapshot.current = JSON.stringify(board.snapshotJson);
+      } catch {
+        lastSavedSnapshot.current = null;
+      }
+    }
+
+    isSnapshotLoaded.current = true;
+  }, [editor, board]);
+
+  const saveBoard = useCallback(async () => {
+    if (!editor || !boardId) return;
+
+    const snapshot = editor.getSnapshot();
+    let snapshotString: string | null = null;
+
+    try {
+      snapshotString = JSON.stringify(snapshot);
+    } catch {
+      snapshotString = null;
+    }
+
+    if (snapshotString && snapshotString === lastSavedSnapshot.current) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateBoardSnapshot(boardId, snapshot);
+      setLastSavedAt(new Date());
+      if (snapshotString) {
+        lastSavedSnapshot.current = snapshotString;
+      }
+      void mutate();
+    } catch (error) {
+      console.error("Failed to save board snapshot", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [boardId, editor, mutate]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const interval = setInterval(() => {
+      void saveBoard();
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [editor, saveBoard]);
+
+  const handleDownload = useCallback(async () => {
+    if (!editor) return;
+
+    const shapeIds = Array.from(editor.getCurrentPageShapeIds());
+    if (shapeIds.length === 0) return;
+
+    const result = await editor.toImage(shapeIds, {
+      format: "png",
+      background: true,
+      padding: 24,
+      pixelRatio: 2,
+    });
+
+    const url = URL.createObjectURL(result.blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${board?.title ?? "systempad-board"}.png`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, [board?.title, editor]);
 
   return (
     <div className="relative w-full h-full z-0">
       <Tldraw 
         inferDarkMode
-        persistenceKey="systempad-board"
+        persistenceKey={`systempad-board-${boardId}`}
+        onMount={setEditor}
       />
       
       {/* Premium Overlay UI */}
@@ -44,21 +136,33 @@ export function Canvas() {
       {/* Dynamic Top Bar (Board Title & Actions) */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
         <div className="flex items-center bg-black/80 backdrop-blur-md border border-[#27272A] rounded-2xl p-1 shadow-2xl">
-           <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1A1A1B] transition-all">
+           <button
+             onClick={() => void saveBoard()}
+             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1A1A1B] transition-all"
+           >
              <Save className="w-3.5 h-3.5" />
-             Save
+             {isSaving ? "Saving..." : "Save"}
            </button>
            <div className="w-px h-6 bg-[#27272A] mx-1" />
            <button className="p-2.5 rounded-xl text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1A1A1B] transition-all">
              <Share2 className="w-4 h-4" />
            </button>
-           <button className="p-2.5 rounded-xl text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1A1A1B] transition-all">
+           <button
+             onClick={() => void handleDownload()}
+             className="p-2.5 rounded-xl text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1A1A1B] transition-all"
+           >
              <Download className="w-4 h-4" />
            </button>
            <button className="p-2.5 rounded-xl text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-[#1A1A1B] transition-all">
              <Settings className="w-4 h-4" />
            </button>
         </div>
+
+        {lastSavedAt ? (
+          <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] bg-black/80 border border-[#27272A] rounded-xl">
+            Saved {lastSavedAt.toLocaleTimeString()}
+          </div>
+        ) : null}
         
         <button className="btn-primary py-2 px-6 shadow-2xl">
           Publish

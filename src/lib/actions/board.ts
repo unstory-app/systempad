@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { boards, workspaces } from "@/db/schema";
+import { boards } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -21,6 +21,32 @@ export async function createBoard(workspaceId: string, creatorId: string, title:
   
   revalidatePath("/dashboard");
   return newBoard;
+}
+
+export async function getBoardById(boardId: string) {
+  if (!boardId) return null;
+
+  return await db.query.boards.findFirst({
+    where: eq(boards.id, boardId),
+  });
+}
+
+export async function updateBoardSnapshot(boardId: string, snapshotJson: unknown) {
+  if (!boardId) return;
+
+  // Postgres driver rejects undefined in JSON payloads.
+  const sanitizedSnapshot = JSON.parse(JSON.stringify(snapshotJson));
+
+  await db
+    .update(boards)
+    .set({
+      snapshotJson: sanitizedSnapshot,
+      updatedAt: new Date(),
+    })
+    .where(eq(boards.id, boardId));
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/board/${boardId}`);
 }
 
 export async function deleteBoard(boardId: string) {

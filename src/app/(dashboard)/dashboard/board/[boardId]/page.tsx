@@ -1,9 +1,11 @@
 import { Canvas } from "@/components/editor/canvas";
 
-export default function BoardPage({ params }: { params: { boardId: string } }) {
+export default async function BoardPage({ params }: { params: Promise<{ boardId: string }> }) {
+  const { boardId } = await params;
+
   return (
     <div className="h-screen w-full relative">
-       <Canvas />
+       <Canvas boardId={boardId} />
     </div>
   );
 }
