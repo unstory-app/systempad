@@ -10,11 +10,11 @@ export function Hero({ heroImageUrl }: { heroImageUrl: string }) {
         </div>
         
         <h1 className="text-6xl md:text-8xl font-display font-medium tracking-tighter mb-8 text-foreground max-w-4xl leading-[0.9]">
-          Start for free, then pay as you grow
+          Architecture design, <br className="hidden md:block" />simplified.
         </h1>
         
         <p className="max-w-xl text-lg md:text-xl text-muted-foreground mb-12 font-medium">
-          The fastest way to design, document, and share system architectures.
+          Map out your systems in seconds. Stop fighting with drawing tools. Start building with clarity.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-24">
@@ -23,16 +23,6 @@ export function Hero({ heroImageUrl }: { heroImageUrl: string }) {
           </Link>
         </div>
 
-        <div className="relative w-full max-w-5xl mx-auto rounded-xl overflow-hidden border border-border shadow-2xl scale-[1.02]">
-          <Image 
-            src={heroImageUrl} 
-            alt="SystemPad Interface" 
-            width={1200} 
-            height={800} 
-            className="w-full h-auto object-cover grayscale opacity-90 transition-all hover:grayscale-0 hover:opacity-100 duration-1000"
-            priority
-          />
-        </div>
       </div>
     </section>
   );

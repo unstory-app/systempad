@@ -3,26 +3,26 @@ export function Pricing() {
     {
       name: "Free",
       price: "$0",
-      description: "Perfect for independent engineers and personal projects.",
-      cta: "Start building now"
+      description: "Everything you need to plan your first system today.",
+      cta: "Build for free"
     },
     {
       name: "Pro",
       price: "$12",
-      description: "For professionals who need unlimited boards and AI features.",
-      cta: "Start building now"
+      description: "Unlimited boards and AI power for professional engineers.",
+      cta: "Start free trial"
     },
     {
       name: "Team",
       price: "$49",
-      description: "Collaborative features for engineering squads.",
-      cta: "Start building now"
+      description: "Collaborative tools for squads building together.",
+      cta: "Start free trial"
     },
     {
       name: "Scale",
       price: "$199",
-      description: "For organizations with custom security and compliance needs.",
-      cta: "Start building now"
+      description: "Custom controls and security for growing organizations.",
+      cta: "Talk to sales"
     }
   ];
 

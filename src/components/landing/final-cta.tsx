@@ -5,12 +5,12 @@ export function FinalCTA() {
     <section className="py-32 bg-background border-t border-border">
       <div className="max-container px-6 text-center">
         <h2 className="text-6xl md:text-8xl font-display font-medium tracking-tighter mb-10 text-foreground">
-          Design systems <br/>at scale
+          Build your next system <br/>with absolute clarity.
         </h2>
         
         <div className="flex justify-center">
-          <Link href="/handler/sign-up" className="btn-primary px-12 py-5 text-sm font-bold">
-            Start for free
+          <Link href="/handler/sign-up" className="btn-primary px-12 py-5 text-sm font-bold text-white">
+            Get started for free
           </Link>
         </div>
         

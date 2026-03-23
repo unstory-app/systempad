@@ -3,18 +3,18 @@ import { LayoutDashboard, Box, Sparkles } from "lucide-react";
 export function Features() {
   const features = [
     {
-      title: "Infinite Visual Canvas",
-      description: "Design distributed architectures without limits.",
+      title: "Crystal Clear Diagrams",
+      description: "Map your microservices and flows without the mess.",
       icon: LayoutDashboard
     },
     {
-      title: "Ready Components",
-      description: "Drag-and-drop cloud primitives instantly.",
+      title: "Built-in Components",
+      description: "Drag-and-drop cloud primitives instantly. No more drawing boxes.",
       icon: Box
     },
     {
-      title: "AI Architecture Generator",
-      description: "Describe your system; get a diagram in seconds.",
+      title: "AI-Powered Speed",
+      description: "Describe your system; our AI builds the diagram for you.",
       icon: Sparkles
     }
   ];
