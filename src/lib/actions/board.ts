@@ -4,6 +4,13 @@ import { db } from "@/lib/db";
 import { boards } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { uniqueNamesGenerator, Config, adjectives, colors, animals } from 'unique-names-generator';
+
+const nameConfig: Config = {
+  dictionaries: [adjectives, colors, animals],
+  separator: '-',
+  length: 2,
+};
 
 export async function getBoardsByWorkspace(workspaceId: string) {
   return await db.query.boards.findMany({
@@ -12,11 +19,23 @@ export async function getBoardsByWorkspace(workspaceId: string) {
   });
 }
 
-export async function createBoard(workspaceId: string, creatorId: string, title: string = "Untitled Board") {
+export async function createBoard(workspaceId: string, creatorId: string, title?: string) {
+  const generatedSlug = uniqueNamesGenerator(nameConfig);
+  
+  // Create a human readable title from the slug (e.g., "red-fox" -> "Red Fox")
+  const generatedTitle = generatedSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  
+  const finalTitle = title && title !== "Untitled Board" ? title : generatedTitle;
+  // If a custom title is given, slugify it. Otherwise use the guaranteed unique generated slug.
+  const finalSlug = title && title !== "Untitled Board" 
+    ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 6)
+    : generatedSlug + '-' + Math.random().toString(36).substring(2, 6);
+
   const [newBoard] = await db.insert(boards).values({
     workspaceId,
     creatorId,
-    title,
+    title: finalTitle,
+    slug: finalSlug,
   }).returning();
   
   revalidatePath("/dashboard");

@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, uuid, jsonb, boolean, uniqueIndex, integer } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // --- Users ---
 // Using UUID for public IDs, text for emails
@@ -39,6 +39,7 @@ export const boards = pgTable("boards", {
   workspaceId: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }).notNull(),
   creatorId: uuid("creator_id").references(() => users.id).notNull(),
   title: text("title").notNull().default("Untitled Board"),
+  slug: text("slug").notNull().unique().default(sql`gen_random_uuid()::text`),
   isPublic: boolean("is_public").default(false).notNull(),
   isArchived: boolean("is_archived").default(false).notNull(),
   

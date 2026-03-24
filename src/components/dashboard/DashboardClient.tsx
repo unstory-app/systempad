@@ -9,6 +9,7 @@ import { createBoard, deleteBoard, getBoardsByWorkspace } from "@/lib/actions/bo
 import { BoardCard } from "./BoardCard";
 
 interface DashboardClientProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialBoards: any[];
   workspaceId: string;
   userId: string;
@@ -28,7 +29,7 @@ export function DashboardClient({ initialBoards, workspaceId, userId }: Dashboar
     if (!workspaceId || isSaving) return;
     setIsSaving(true);
     try {
-      const b = await createBoard(workspaceId, userId, "New System Architecture");
+      const b = await createBoard(workspaceId, userId);
       router.push(`/board/${b.id}`);
     } catch (e) {
       console.error(e);
@@ -88,6 +89,7 @@ export function DashboardClient({ initialBoards, workspaceId, userId }: Dashboar
             <span className="text-[13px] font-medium">New board</span>
           </button>
 
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {boards.map((board: any) => (
             <BoardCard 
               key={board.id} 
