@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, jsonb, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, jsonb, boolean, uniqueIndex, integer } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // --- Users ---
@@ -40,6 +40,11 @@ export const boards = pgTable("boards", {
   creatorId: uuid("creator_id").references(() => users.id).notNull(),
   title: text("title").notNull().default("Untitled Board"),
   isPublic: boolean("is_public").default(false).notNull(),
+  isArchived: boolean("is_archived").default(false).notNull(),
+  
+  // Gallery sorting metrics
+  likes: integer("likes").default(0).notNull(),
+  views: integer("views").default(0).notNull(),
   
   // The big one: Binary or JSON snapshot of the canvas scene graph
   snapshotJson: jsonb("snapshot_json"),

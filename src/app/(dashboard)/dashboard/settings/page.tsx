@@ -8,9 +8,17 @@ import {
   ChevronRight
 } from "lucide-react";
 
-export default function SettingsPage() {
+import { stackServerApp } from "@/stack/server";
+import { redirect } from "next/navigation";
+
+export default async function SettingsPage() {
+  const user = await stackServerApp.getUser();
+  if (!user) {
+    redirect(stackServerApp.urls.signIn);
+  }
+
   const sections = [
-    { name: "My Account", icon: User, desc: "Personal information and security settings" },
+    { name: "My Account", icon: User, desc: user.primaryEmail || "Personal information and security settings" },
     { name: "Subscription", icon: CreditCard, desc: "Premium plan and billing history" },
     { name: "Collaboration", icon: Shield, desc: "Workspace permissions and team access" },
     { name: "Notifications", icon: Bell, desc: "Updates, comments and system alerts" },

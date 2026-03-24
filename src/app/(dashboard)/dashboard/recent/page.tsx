@@ -1,13 +1,32 @@
-export default function RecentPage() {
+import { stackServerApp } from "@/stack/server";
+import { syncUser } from "@/lib/actions/user";
+import { getRecentBoardsByWorkspace } from "@/lib/actions/board";
+import { RecentClient } from "@/components/dashboard/RecentClient";
+import { redirect } from "next/navigation";
+
+export default async function RecentPage() {
+  const stackUser = await stackServerApp.getUser();
+  if (!stackUser) {
+    redirect(stackServerApp.urls.signIn);
+  }
+
+  const dbUser = await syncUser(stackUser);
+  if (!dbUser || !dbUser.workspaces?.[0]?.id) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-muted-foreground">Workspace not found.</p>
+      </div>
+    );
+  }
+
+  const workspaceId = dbUser.workspaces[0].id;
+  const initialBoards = await getRecentBoardsByWorkspace(workspaceId);
+
   return (
-    <div className="flex flex-col items-center justify-center py-20 opacity-50">
-       <div className="w-16 h-16 bg-accent/30 rounded-2xl flex items-center justify-center mb-6 border border-border">
-         <History className="w-8 h-8 text-muted-foreground" />
-       </div>
-       <h2 className="text-xl font-bold text-foreground mb-2">No recent history</h2>
-       <p className="text-sm text-muted-foreground">Boards you open or edit will appear here.</p>
-    </div>
+    <RecentClient 
+      initialBoards={initialBoards} 
+      workspaceId={workspaceId}
+      userId={dbUser.id}
+    />
   );
 }
-
-import { History } from "lucide-react";
