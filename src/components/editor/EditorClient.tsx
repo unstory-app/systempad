@@ -13,7 +13,10 @@ import {
   Layers, 
   Trash2, 
   Loader2,
-  Workflow
+  Workflow,
+  Grid3X3,
+  Maximize,
+  Magnet
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
@@ -38,12 +41,26 @@ export function EditorClient({ board }: EditorClientProps) {
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const [isCollaborating, setIsCollaborating] = useState(false);
 
+  // Advanced Feature Toggles
+  const [gridModeEnabled, setGridModeEnabled] = useState(false);
+  const [zenModeEnabled, setZenModeEnabled] = useState(false);
+  const [objectsSnapModeEnabled, setObjectsSnapModeEnabled] = useState(false);
+
   useEffect(() => {
     // Dynamic import the whole library to be SSR safe
     import("@excalidraw/excalidraw").then((mod) => {
       setExcali(mod);
     });
   }, []);
+
+  // Synchronize next-themes resolvedTheme with Excalidraw API seamlessly
+  useEffect(() => {
+    if (excalidrawAPI && resolvedTheme) {
+      excalidrawAPI.updateScene({
+        appState: { theme: resolvedTheme === "dark" ? "dark" : "light" }
+      });
+    }
+  }, [resolvedTheme, excalidrawAPI]);
 
   // Debounced save function
   const debouncedSave = useMemo(
@@ -146,8 +163,10 @@ export function EditorClient({ board }: EditorClientProps) {
     <div className="h-screen w-full overflow-hidden bg-background relative flex flex-col font-sans selection:bg-foreground selection:text-background">
       <div className="flex-1 w-full relative">
         <Excalidraw
-          key={resolvedTheme || 'light'}
           excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
+          gridModeEnabled={gridModeEnabled}
+          zenModeEnabled={zenModeEnabled}
+          objectsSnapModeEnabled={objectsSnapModeEnabled}
           initialData={{
             elements: board.snapshotJson?.elements || [],
             appState: {
@@ -330,6 +349,33 @@ export function EditorClient({ board }: EditorClientProps) {
                            <option>AWS Architecture</option>
                            <option>Google Cloud</option>
                         </select>
+                    </div>
+                    <div className="flex flex-col gap-3 pt-2 border-t border-border/50">
+                       <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest block">Canvas Preferences</label>
+                       
+                       <label className="flex items-center justify-between group cursor-pointer">
+                         <div className="flex items-center gap-2">
+                           <Grid3X3 className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                           <span className="text-sm">Grid Mode</span>
+                         </div>
+                         <input type="checkbox" className="accent-foreground w-4 h-4 bg-background" checked={gridModeEnabled} onChange={(e) => setGridModeEnabled(e.target.checked)} />
+                       </label>
+
+                       <label className="flex items-center justify-between group cursor-pointer">
+                         <div className="flex items-center gap-2">
+                           <Magnet className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                           <span className="text-sm">Snap to Objects</span>
+                         </div>
+                         <input type="checkbox" className="accent-foreground w-4 h-4 bg-background" checked={objectsSnapModeEnabled} onChange={(e) => setObjectsSnapModeEnabled(e.target.checked)} />
+                       </label>
+
+                       <label className="flex items-center justify-between group cursor-pointer">
+                         <div className="flex items-center gap-2">
+                           <Maximize className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                           <span className="text-sm">Zen Mode</span>
+                         </div>
+                         <input type="checkbox" className="accent-foreground w-4 h-4 bg-background" checked={zenModeEnabled} onChange={(e) => setZenModeEnabled(e.target.checked)} />
+                       </label>
                     </div>
                  </div>
               </Sidebar.Tab>
