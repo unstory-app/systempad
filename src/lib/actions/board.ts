@@ -53,3 +53,9 @@ export async function deleteBoard(boardId: string) {
   await db.delete(boards).where(eq(boards.id, boardId));
   revalidatePath("/dashboard");
 }
+
+export async function updateBoardName(boardId: string, title: string) {
+  if (!boardId) return;
+  await db.update(boards).set({ title, updatedAt: new Date() }).where(eq(boards.id, boardId));
+  revalidatePath("/dashboard");
+}

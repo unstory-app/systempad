@@ -3,13 +3,11 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 // We move all Excalidraw imports to a dymanic import inside useEffect to avoid SSR window errors
 import "@excalidraw/excalidraw/index.css";
-import { updateBoardSnapshot } from "@/lib/actions/board";
+import { updateBoardSnapshot, updateBoardName } from "@/lib/actions/board";
 import { 
   ChevronLeft,
   Sparkles, 
-  Settings, 
   Info, 
-  Share2, 
   Layers, 
   Trash2, 
   Loader2,
@@ -45,6 +43,11 @@ export function EditorClient({ board }: EditorClientProps) {
   const [gridModeEnabled, setGridModeEnabled] = useState(false);
   const [zenModeEnabled, setZenModeEnabled] = useState(false);
   const [objectsSnapModeEnabled, setObjectsSnapModeEnabled] = useState(false);
+
+  // AI Feature State
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [boardName, setBoardName] = useState(board.title);
 
   useEffect(() => {
     // Dynamic import the whole library to be SSR safe
@@ -83,6 +86,53 @@ export function EditorClient({ board }: EditorClientProps) {
     }
   }, [excalidrawAPI]);
 
+  const deployAIDiagram = async () => {
+    if (!aiPrompt.trim() || !excalidrawAPI) return;
+    setIsGenerating(true);
+    try {
+      // Simulate API latency
+      await new Promise(r => setTimeout(r, 1500));
+      const currentElements = excalidrawAPI.getSceneElements();
+      // Generate a mock architecture box based on the prompt
+      const newElements = [
+        {
+          type: "rectangle",
+          x: 400 + Math.random() * 100,
+          y: 200 + Math.random() * 100,
+          width: 250,
+          height: 120,
+          backgroundColor: resolvedTheme === 'dark' ? "#1e1e24" : "#f8f9fa",
+          strokeColor: resolvedTheme === 'dark' ? "#a8a29e" : "#574c4f",
+          fillStyle: "solid",
+          strokeWidth: 2,
+          roughness: 0,
+          id: `ai-group-rect-${Date.now()}`
+        },
+        {
+          type: "text",
+          x: 420,
+          y: 230,
+          text: `AI: ${aiPrompt.substring(0, 15)}...`,
+          fontSize: 20,
+          fontFamily: 1,
+          textAlign: "left",
+          strokeColor: resolvedTheme === 'dark' ? "#e7e5e4" : "#1c1917"
+        }
+      ];
+      excalidrawAPI.updateScene({ elements: [...currentElements, ...newElements] });
+      setAiPrompt("");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleNameUpdate = async (newName: string) => {
+     setBoardName(newName);
+     if (newName.trim() !== "") {
+       await updateBoardName(board.id, newName);
+     }
+  };
+
   const renderTopLeftUI = useCallback(() => (
     <div className="flex items-center gap-3 p-2">
       <button 
@@ -93,7 +143,7 @@ export function EditorClient({ board }: EditorClientProps) {
       </button>
       <div className="flex flex-col bg-background/80 backdrop-blur-md px-4 py-1.5 border border-border rounded-xl shadow-lg translate-y-1">
         <div className="flex items-center gap-2">
-           <h1 className="text-[14px] font-bold tracking-tight text-foreground truncate max-w-[150px]">{board.title}</h1>
+           <h1 className="text-[14px] font-bold tracking-tight text-foreground truncate max-w-[150px]">{boardName}</h1>
            <div className={`w-2 h-2 rounded-full ${isSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
         </div>
         <div className="flex items-center gap-2">
@@ -103,7 +153,7 @@ export function EditorClient({ board }: EditorClientProps) {
         </div>
       </div>
     </div>
-  ), [router, board.title, isSaving]);
+  ), [router, boardName, isSaving]);
 
   const handleShare = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
@@ -112,28 +162,14 @@ export function EditorClient({ board }: EditorClientProps) {
 
   const renderTopRightUI = useCallback(() => (
     <div className="flex items-center gap-3 p-2">
-      <div className="hidden sm:flex -space-x-2 mr-2">
-         {[1, 2].map(i => (
-           <div key={i} className="w-8 h-8 rounded-full border-2 border-background bg-accent flex items-center justify-center text-[10px] font-bold shadow-sm">
-              {i === 1 ? 'JD' : 'SR'}
-           </div>
-         ))}
-      </div>
       {Excali && (
         <Excali.LiveCollaborationTrigger
           isCollaborating={isCollaborating}
           onSelect={() => setIsCollaborating(!isCollaborating)}
         />
       )}
-      <button 
-        onClick={handleShare}
-        className="h-10 px-4 bg-primary text-primary-foreground rounded-xl text-[12px] font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl active:scale-95 group"
-      >
-        <Share2 className="w-3.5 h-3.5" />
-        Share
-      </button>
     </div>
-  ), [isCollaborating, Excali, handleShare]);
+  ), [isCollaborating, Excali]);
 
   if (!Excali) {
     return (
@@ -309,24 +345,22 @@ export function EditorClient({ board }: EditorClientProps) {
                 </div>
                 <div className="flex flex-col gap-3">
                    <textarea 
+                     value={aiPrompt}
+                     onChange={(e) => setAiPrompt(e.target.value)}
+                     disabled={isGenerating}
                      placeholder="e.g. A server connected to a Postgres database with a Load Balancer"
-                     className="w-full h-32 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-1 focus:ring-foreground transition-all resize-none placeholder:text-muted-foreground/30"
+                     className="w-full h-32 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-1 focus:ring-foreground transition-all resize-none placeholder:text-muted-foreground/30 disabled:opacity-50"
                    />
                     <button 
-                     onClick={(e) => {
-                       const btn = e.currentTarget;
-                       const originalText = btn.innerHTML;
-                       btn.innerHTML = '<span class="animate-spin mr-2">◌</span> Architecting...';
-                       setTimeout(() => {
-                         btn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Diagram Created';
-                         alert("AI generation is in preview. In a real environment, this would call your DeepSeek/GPT-4o model via Cloudflare AI Gateway.");
-                         setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-                       }, 2000);
-                     }}
-                     className="w-full bg-foreground text-background font-bold h-10 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md group"
+                     onClick={deployAIDiagram}
+                     disabled={isGenerating || !aiPrompt.trim()}
+                     className="w-full bg-foreground text-background font-bold h-10 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md group disabled:opacity-50 disabled:cursor-not-allowed"
                    >
-                     <Sparkles className="w-4 h-4 group-hover:animate-pulse" />
-                     Generate Diagram
+                     {isGenerating ? (
+                       <><Loader2 className="w-4 h-4 animate-spin" /> Architecting...</>
+                     ) : (
+                       <><Sparkles className="w-4 h-4 group-hover:animate-pulse" /> Generate Diagram</>
+                     )}
                    </button>
                    <p className="text-[10px] text-muted-foreground text-center">AI Credits: 50 / 50 remaining</p>
                 </div>
@@ -337,7 +371,8 @@ export function EditorClient({ board }: EditorClientProps) {
                     <div>
                         <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Display Name</label>
                         <input 
-                          defaultValue={board.title}
+                          value={boardName}
+                          onChange={(e) => handleNameUpdate(e.target.value)}
                           className="w-full bg-background border border-border rounded-lg p-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-foreground"
                         />
                     </div>
