@@ -1,6 +1,7 @@
 import { getBoardById } from "@/lib/actions/board";
 import { EditorClient } from "@/components/editor/EditorClient";
 import { redirect } from "next/navigation";
+import { Room } from "@/components/editor/Room";
 
 interface PageProps {
   params: Promise<{
@@ -27,6 +28,9 @@ export default async function EditorPage({ params }: PageProps) {
   }
 
   return (
-    <EditorClient board={board as any} />
+    <Room id={boardId}>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <EditorClient board={board as any} />
+    </Room>
   );
 }

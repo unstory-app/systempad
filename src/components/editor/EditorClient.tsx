@@ -4,7 +4,7 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 // We move all Excalidraw imports to a dymanic import inside useEffect to avoid SSR window errors
 import "@excalidraw/excalidraw/index.css";
 import { updateBoardSnapshot, updateBoardName, deleteBoard } from "@/lib/actions/board";
-import { 
+import {
   ChevronLeft,
   Sparkles, 
   Info, 
@@ -28,6 +28,15 @@ import {
   ChevronDown
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useOthers, useUpdateMyPresence, useSelf } from "@liveblocks/react/suspense";
+
+// Helper to generate a consistent color based on standard inputs
+const getUserColor = (id: string) => {
+  const colors = ["#ff0000", "#00ff00", "#0000ff", "#ff00ff", "#00ffff", "#ffff00", "#ff8800", "#8800ff"];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+};
 import { useRouter } from "next/navigation";
 import { UserButton } from "@stackframe/stack";
 import { DocumentEditor } from "./DocumentEditor";
@@ -67,6 +76,11 @@ export function EditorClient({ board }: EditorClientProps) {
   // AI Feature State
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  // Multiplayer Presence State
+  const others = useOthers();
+  const updateMyPresence = useUpdateMyPresence();
+  const self = useSelf();
+
   const [boardName, setBoardName] = useState(board.title);
 
   useEffect(() => {
@@ -158,10 +172,15 @@ export function EditorClient({ board }: EditorClientProps) {
 
   // Debounced save function
   const debouncedSave = useMemo(
-    () => debounce(async (elements: readonly any[], appState: any, files: any) => {
+    () => debounce(async (elements: readonly any[], appState: any, files: any, docTitle: string, docText: string) => {
       setIsSaving(true);
       try {
-        await updateBoardSnapshot(board.id, { elements, appState, files });
+        await updateBoardSnapshot(board.id, { 
+          elements, 
+          appState, 
+          files, 
+          document: { title: docTitle, content: docText } 
+        });
       } catch (error) {
         console.error("Auto-save failed:", error);
       } finally {
@@ -309,6 +328,23 @@ export function EditorClient({ board }: EditorClientProps) {
     );
   }
 
+  // Convert Liveblocks presence to Excalidraw Collaborators Map
+  const collaborators = new Map(
+    others.map((other) => {
+      return [
+        other.connectionId.toString(),
+        {
+          pointer: other.presence.cursor ? { x: other.presence.cursor.x, y: other.presence.cursor.y } : undefined,
+          button: other.presence.button || "up",
+          username: other.info?.name || "Anonymous Architect",
+          userState: "active" as const,
+          color: { background: getUserColor(other.connectionId.toString()), stroke: getUserColor(other.connectionId.toString()) },
+          avatarUrl: other.info?.avatar,
+        }
+      ];
+    })
+  );
+
   const { Excalidraw, MainMenu, Sidebar } = Excali;
 
   return (
@@ -396,37 +432,44 @@ export function EditorClient({ board }: EditorClientProps) {
         {/* Canvas Area */}
         {viewMode !== "document" && (
           <div className={`${viewMode === "both" ? "w-2/3 xl:w-3/5" : "w-full"} h-full relative transition-all duration-300`}>
-        <Excalidraw
-          excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
-          gridModeEnabled={gridModeEnabled}
-          zenModeEnabled={zenModeEnabled}
-          objectsSnapModeEnabled={objectsSnapModeEnabled}
-          initialData={{
-            elements: board.snapshotJson?.elements || [],
-            appState: {
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-member-access
-               ...(({ collaborators, ...rest }: any) => rest)(board.snapshotJson?.appState || {}),
-               theme: resolvedTheme === 'dark' ? 'dark' : 'light',
-               viewBackgroundColor: resolvedTheme === 'dark' ? '#09090b' : '#ffffff',
-            },
-            files: board.snapshotJson?.files || {},
-          }}
-          onChange={(elements: any, appState: any, files: any) => {
-            debouncedSave(elements, appState, files);
-          }}
-          theme={resolvedTheme === "dark" ? "dark" : "light"}
-          renderTopLeftUI={renderTopLeftUI}
-          renderTopRightUI={renderTopRightUI}
-          UIOptions={{
-            canvasActions: {
-              loadScene: false,
-              saveToActiveFile: false,
-              toggleTheme: true,
-              export: { saveFileToDisk: true },
-            },
-            tools: { image: true },
-          }}
-        >
+            <Excalidraw
+              excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
+              gridModeEnabled={gridModeEnabled}
+              zenModeEnabled={zenModeEnabled}
+              objectsSnapModeEnabled={objectsSnapModeEnabled}
+              theme={resolvedTheme === "dark" ? "dark" : "light"}
+              collaborators={collaborators}
+              onPointerUpdate={(payload: any) => {
+                updateMyPresence({
+                  cursor: payload.pointer,
+                  button: payload.button,
+                });
+              }}
+              initialData={{
+                elements: board.snapshotJson?.elements || [],
+                appState: {
+                   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-member-access
+                   ...(({ collaborators, ...rest }: any) => rest)(board.snapshotJson?.appState || {}),
+                   theme: resolvedTheme === 'dark' ? 'dark' : 'light',
+                   viewBackgroundColor: resolvedTheme === 'dark' ? '#09090b' : '#ffffff',
+                },
+                files: board.snapshotJson?.files || {},
+              }}
+              onChange={(elements: readonly any[], appState: any, files: any) => {
+                debouncedSave(elements, appState, files, boardName, documentText);
+              }}
+              renderTopLeftUI={renderTopLeftUI}
+              renderTopRightUI={renderTopRightUI}
+              UIOptions={{
+                canvasActions: {
+                  loadScene: false,
+                  saveToActiveFile: false,
+                  toggleTheme: true,
+                  export: { saveFileToDisk: true },
+                },
+                tools: { image: true },
+              }}
+            >
           <MainMenu>
             <MainMenu.DefaultItems.SaveAsImage />
             <MainMenu.DefaultItems.Export />

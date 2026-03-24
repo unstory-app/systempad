@@ -1,15 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-import "@uiw/react-md-editor/markdown-editor.css";
-import "@uiw/react-markdown-preview/markdown.css";
-import { useTheme } from "next-themes";
 
-const MDEditor = dynamic(
-  () => import("@uiw/react-md-editor").then((mod) => mod.default),
-  { ssr: false }
-);
+import { useTheme } from "next-themes";
+import { EditorRoot, EditorContent } from "novel";
 
 interface DocumentEditorProps {
   value: string;
@@ -39,18 +33,24 @@ export function DocumentEditor({ value, onChange, title, onTitleChange }: Docume
             onChange={(e) => onTitleChange(e.target.value)}
           />
           
-          <div className="flex-1 w-full prose-editor-wrapper">
-            <MDEditor
-              value={value}
-              onChange={(val) => onChange(val || "")}
-              preview="edit"
-              hideToolbar={false}
-              height="100%"
-              className="bg-transparent! border-none! shadow-none!"
-              textareaProps={{
-                 placeholder: "Write system documentation, architecture notes, or deployment specs... (Supports Notion-style Markdown)"
-              }}
-            />
+         <div className="flex-1 w-full prose-editor-wrapper">
+            <EditorRoot>
+              <EditorContent
+                 className="flex-1 w-full prose prose-neutral dark:prose-invert max-w-full"
+                 initialContent={
+                   (() => {
+                     if (!value) return undefined;
+                     try { return JSON.parse(value); } 
+                     catch(e) { 
+                       return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: value }] }] };
+                     }
+                   })()
+                 }
+                 onUpdate={({ editor }) => {
+                   onChange(JSON.stringify(editor.getJSON()));
+                 }}
+              />
+            </EditorRoot>
           </div>
        </div>
     </div>
