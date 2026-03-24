@@ -21,23 +21,23 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-12">
-        <h1 className="text-3xl font-display font-bold text-[#F5F5F5] mb-2">Settings</h1>
-        <p className="text-[#A1A1AA] text-sm">Manage your account preferences and workspace configuration.</p>
+        <h1 className="text-3xl font-display font-bold text-foreground mb-2">Settings</h1>
+        <p className="text-muted-foreground text-sm">Manage your account preferences and workspace configuration.</p>
       </div>
 
       <div className="space-y-4">
          {sections.map((s, i) => (
-           <div key={i} className="group glass-card p-6 rounded-2xl border border-[#27272A] hover:border-[#D4A853]/20 transition-all flex items-center justify-between cursor-pointer">
+           <div key={i} className="group glass-card p-6 rounded-2xl border border-border hover:border-foreground/30 transition-all flex items-center justify-between cursor-pointer bg-background">
               <div className="flex items-center gap-5">
-                 <div className="w-12 h-12 bg-[#1A1A1B] rounded-xl flex items-center justify-center text-[#A1A1AA] group-hover:text-[#D4A853] transition-colors border border-[#27272A]">
+                 <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors border border-border">
                     <s.icon className="w-5 h-5" />
                  </div>
                  <div>
-                    <h3 className="font-bold text-[#F5F5F5] group-hover:text-[#D4A853] transition-colors">{s.name}</h3>
-                    <p className="text-xs text-[#A1A1AA]">{s.desc}</p>
+                    <h3 className="font-bold text-foreground group-hover:text-foreground/80 transition-colors">{s.name}</h3>
+                    <p className="text-xs text-muted-foreground">{s.desc}</p>
                  </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-[#27272A] group-hover:text-[#D4A853] transition-all" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-all" />
            </div>
          ))}
       </div>
