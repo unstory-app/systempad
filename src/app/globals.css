@@ -285,26 +285,34 @@ h1, h2, h3, h4, .font-display {
   }
 }
 
-/* ─── Eraser.io Parity: Excalidraw UI Overrides ────────────────────────── */
+/* ─── Eraser.io Parity: Excalidraw Native UI Styling ────────────────────────── */
 
-/* Shift Toolbar to Left Axis */
-.excalidraw .App-toolbar {
-  position: absolute !important;
-  left: 1rem !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  flex-direction: column !important;
-  border-radius: 12px !important;
-  background: var(--background) !important;
-  border: 1px solid var(--border) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+/* Style the native Excalidraw UI to look like the high-end dark pill on light canvas */
+.excalidraw {
+  --color-primary: #7c3aed; /* Violet primary active color */
+  --island-bg-color: #09090b; /* Very dark background for toolbars */
+  --icon-fill-color: #f4f4f5; /* Light icons */
+  --text-primary-color: #f4f4f5; 
+  --button-hover-bg: #27272a;
+  --button-hover-color: #ffffff;
+  --button-gray-1: #3f3f46;
+  --button-gray-2: #52525b;
 }
-.excalidraw .App-toolbar__content {
-  flex-direction: column !important;
+
+/* For dark mode, ensure canvas background is dark but toolbar remains consistently dark and distinct */
+.dark .excalidraw {
+  --island-bg-color: #000000;
+  --icon-fill-color: #ffffff;
 }
-.excalidraw .App-toolbar .ToolIcon__icon {
-  width: 100% !important;
-  height: 100% !important;
+
+/* Hide Excalidraw default hints if they cause clutter */
+.excalidraw .layer-ui__wrapper .App-menu__left {
+  display: none !important;
+}
+
+/* Ensure popups (like Color Picker) open favorably */
+.excalidraw .Island.popup {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
 }
 
 /* Ensure popups (like Color Picker) open favorably */

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 // We move all Excalidraw imports to a dymanic import inside useEffect to avoid SSR window errors
 import "@excalidraw/excalidraw/index.css";
-import { updateBoardSnapshot, updateBoardName } from "@/lib/actions/board";
+import { updateBoardSnapshot, updateBoardName, deleteBoard } from "@/lib/actions/board";
 import { 
   ChevronLeft,
   Sparkles, 
@@ -11,7 +11,6 @@ import {
   Layers, 
   Trash2, 
   Loader2,
-  Workflow,
   Grid3X3,
   Maximize,
   Magnet,
@@ -22,10 +21,16 @@ import {
   Database,
   Cloud,
   Globe,
-  Monitor
+  Monitor,
+  Home,
+  Share2,
+  Edit3,
+  ChevronDown
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { UserButton } from "@stackframe/stack";
+import { DocumentEditor } from "./DocumentEditor";
 
 interface EditorClientProps {
   board: {
@@ -41,7 +46,7 @@ interface EditorClientProps {
 
 export function EditorClient({ board }: EditorClientProps) {
   const router = useRouter();
-  const { theme, resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [Excali, setExcali] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
@@ -57,6 +62,7 @@ export function EditorClient({ board }: EditorClientProps) {
   const [documentText, setDocumentText] = useState("");
   const [isIconModalOpen, setIsIconModalOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // AI Feature State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -249,10 +255,26 @@ export function EditorClient({ board }: EditorClientProps) {
     </div>
   ), [router, boardName, isSaving]);
 
-  const handleShare = useCallback(() => {
-    navigator.clipboard.writeText(window.location.href);
-    alert("Board link copied to clipboard!");
-  }, []);
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}/board/${board.id}`;
+    navigator.clipboard.writeText(url);
+    alert("Shareable link copied to clipboard!");
+    setIsDropdownOpen(false);
+  };
+
+  const handleCopyEmbed = () => {
+    const code = `<iframe src="${window.location.origin}/embed/${board.id}" width="100%" height="600" style="border:none; border-radius:12px;"></iframe>`;
+    navigator.clipboard.writeText(code);
+    alert("Embed code copied to clipboard!");
+    setIsDropdownOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (confirm("Are you sure you want to delete this architectural diagram?")) {
+      await deleteBoard(board.id);
+      router.push("/dashboard");
+    }
+  };
 
   const renderTopRightUI = useCallback(() => (
     <div className="flex items-center gap-3 p-2">
@@ -287,41 +309,93 @@ export function EditorClient({ board }: EditorClientProps) {
     );
   }
 
-  const { Excalidraw, MainMenu, WelcomeScreen, Footer, Sidebar } = Excali;
+  const { Excalidraw, MainMenu, Sidebar } = Excali;
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-background relative flex font-sans selection:bg-foreground selection:text-background">
+    <div className="h-screen w-full flex flex-col overflow-hidden bg-background font-sans selection:bg-foreground selection:text-background">
       
-      {/* Top Center View Toggle (Eraser.io Parity) */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-md border border-border rounded-lg shadow-sm flex items-center p-1 z-50 transition-all">
-         <button onClick={() => setViewMode("document")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === "document" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"}`}>Document</button>
-         <button onClick={() => setViewMode("both")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === "both" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"}`}>Both</button>
-         <button onClick={() => setViewMode("canvas")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === "canvas" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"}`}>Canvas</button>
+      {/* Universal Top Navbar (Eraser.io Parity) */}
+      <div className="h-14 w-full bg-background border-b border-border flex items-center justify-between px-4 shrink-0 z-50">
+         
+         {/* Left: Home, Title, Dropdown */}
+         <div className="flex items-center gap-3">
+            <button onClick={() => router.push("/dashboard")} className="p-2 hover:bg-accent rounded-md transition-colors text-muted-foreground hover:text-foreground">
+               <Home className="w-5 h-5" />
+            </button>
+            <div className="w-px h-6 bg-border mx-1" />
+            <div className="flex items-center gap-2 max-w-[200px] sm:max-w-sm">
+               <input 
+                 className="text-sm font-semibold tracking-tight bg-transparent border-none outline-none w-full text-foreground placeholder:text-muted-foreground/30 px-2 py-1 hover:bg-accent/50 focus:bg-accent rounded-md transition-colors"
+                 value={boardName}
+                 onChange={e => handleNameUpdate(e.target.value)}
+                 placeholder="Untitled Board"
+               />
+            </div>
+            
+            <div className="relative">
+              <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="p-1.5 hover:bg-accent rounded-md transition-colors text-muted-foreground hover:text-foreground">
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-popover border border-border shadow-xl rounded-lg overflow-hidden animate-in fade-in zoom-in-95 z-[1000]">
+                   <button onClick={handleCopyLink} className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-accent transition-colors">
+                     <Share2 className="w-4 h-4" /> Copy Link
+                   </button>
+                   <button onClick={handleCopyEmbed} className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-accent transition-colors">
+                     <Monitor className="w-4 h-4" /> Embed Iframe
+                   </button>
+                   <div className="w-full h-px bg-border" />
+                   <button onClick={() => { setIsDropdownOpen(false); handleNameUpdate("Renamed Board"); }} className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-accent transition-colors">
+                     <Edit3 className="w-4 h-4" /> Rename
+                   </button>
+                   <button onClick={handleDelete} className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-destructive/10 text-destructive transition-colors">
+                     <Trash2 className="w-4 h-4" /> Delete Board
+                   </button>
+                </div>
+              )}
+            </div>
+
+            <div className={`ml-4 w-2 h-2 rounded-full hidden sm:block ${isSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} title={isSaving ? "Saving..." : "Saved securely"} />
+         </div>
+
+         {/* Center: View Toggles */}
+         <div className="hidden md:flex items-center bg-accent/50 rounded-lg p-1 border border-border">
+            <button onClick={() => setViewMode("document")} className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === "document" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-background/50"}`}>Document</button>
+            <button onClick={() => setViewMode("both")} className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === "both" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-background/50"}`}>Both</button>
+            <button onClick={() => setViewMode("canvas")} className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === "canvas" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-background/50"}`}>Canvas</button>
+         </div>
+
+         {/* Right: Actions */}
+         <div className="flex items-center gap-3">
+            <button onClick={() => setIsIconModalOpen(true)} className="hidden sm:flex px-3 py-1.5 hover:bg-accent rounded-md transition-colors text-sm font-medium items-center gap-2 text-foreground">
+              <Component className="w-4 h-4" /> Library
+            </button>
+            <button onClick={handleCopyLink} className="px-4 py-1.5 bg-primary text-primary-foreground hover:opacity-90 rounded-md transition-opacity text-sm font-semibold flex items-center gap-2 shadow-sm">
+              <Share2 className="w-4 h-4" /> Share
+            </button>
+            <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+            <UserButton />
+         </div>
       </div>
 
-      {/* Document Area */}
-      {viewMode !== "canvas" && (
-        <div className={`${viewMode === "both" ? "w-1/2 border-r border-border" : "w-full"} h-full flex flex-col bg-background transition-all duration-300 relative z-40`}>
-           <div className="p-12 max-w-3xl mx-auto w-full h-full pt-20 flex flex-col">
-              <input 
-                className="text-4xl font-display font-medium tracking-tight bg-transparent border-none outline-none w-full mb-8 text-foreground placeholder:text-muted-foreground/30" 
-                placeholder="Untitled Document" 
-                value={boardName}
-                onChange={(e) => handleNameUpdate(e.target.value)}
-              />
-              <textarea 
-                className="w-full flex-1 bg-transparent border-none outline-none text-foreground resize-none leading-relaxed text-[15px] placeholder:text-muted-foreground/40" 
-                placeholder="Write system documentation, architecture notes, or deployment specs..."
-                value={documentText}
-                onChange={(e) => setDocumentText(e.target.value)}
-              />
-           </div>
-        </div>
-      )}
+      {/* Main Split Interface */}
+      <div className="flex-1 w-full bg-background relative flex">
+        {/* Document Area */}
+        {viewMode !== "canvas" && (
+          <div className={`${viewMode === "both" ? "w-1/3 xl:w-2/5 border-r border-border" : "w-full"} h-full flex flex-col bg-background transition-all duration-300 relative z-40`}>
+             <DocumentEditor 
+                value={documentText} 
+                onChange={setDocumentText} 
+                title={boardName} 
+                onTitleChange={handleNameUpdate} 
+             />
+          </div>
+        )}
 
-      {/* Canvas Area */}
-      {viewMode !== "document" && (
-        <div className={`${viewMode === "both" ? "w-1/2" : "w-full"} h-full relative transition-all duration-300`}>
+        {/* Canvas Area */}
+        {viewMode !== "document" && (
+          <div className={`${viewMode === "both" ? "w-2/3 xl:w-3/5" : "w-full"} h-full relative transition-all duration-300`}>
         <Excalidraw
           excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
           gridModeEnabled={gridModeEnabled}
@@ -403,39 +477,7 @@ export function EditorClient({ board }: EditorClientProps) {
             <MainMenu.DefaultItems.Help />
           </MainMenu>
 
-          <WelcomeScreen>
-            <WelcomeScreen.Hints.MenuHint />
-            <WelcomeScreen.Hints.ToolbarHint />
-            <WelcomeScreen.Hints.HelpHint />
-            <WelcomeScreen.Center>
-              <WelcomeScreen.Center.Logo>
-                <div className="w-16 h-16 bg-foreground rounded-2xl flex items-center justify-center mb-4 rotate-3 hover:rotate-0 transition-transform shadow-xl border border-border">
-                  <Workflow className="w-10 h-10 text-background" />
-                </div>
-              </WelcomeScreen.Center.Logo>
-              <WelcomeScreen.Center.Heading>SystemPad Architect</WelcomeScreen.Center.Heading>
-              <WelcomeScreen.Center.Menu>
-                <WelcomeScreen.Center.MenuItemLoadScene />
-                <WelcomeScreen.Center.MenuItemHelp />
-              </WelcomeScreen.Center.Menu>
-            </WelcomeScreen.Center>
-          </WelcomeScreen>
 
-          <Footer>
-             <Sidebar.Trigger 
-               name="advanced" 
-               icon={<Sparkles size={16} />} 
-               title="AI & Settings"
-               className="bg-accent/50 hover:bg-accent transition-colors border border-border" 
-             />
-             <div className="hidden lg:flex items-center gap-4 text-[11px] text-muted-foreground ml-4">
-                <span className="flex items-center gap-1 font-bold tracking-tight">
-                   {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Info size={12}/>}
-                   {isSaving ? "Syncing Changes..." : "Edge Cache Synced"}
-                </span>
-             </div>
-          </Footer>
-          
           <Sidebar name="advanced">
             <Sidebar.Header>
                <div className="flex items-center gap-2 px-2 py-1">
@@ -542,8 +584,9 @@ export function EditorClient({ board }: EditorClientProps) {
             </Sidebar.Tabs>
           </Sidebar>
         </Excalidraw>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Eraser.io Parity: Icon Search Modal */}
       {isIconModalOpen && (
