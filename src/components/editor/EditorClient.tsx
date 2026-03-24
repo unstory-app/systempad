@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 // We move all Excalidraw imports to a dymanic import inside useEffect to avoid SSR window errors
+import "@excalidraw/excalidraw/index.css";
 import { updateBoardSnapshot } from "@/lib/actions/board";
 import { 
   ChevronLeft,
@@ -93,10 +94,21 @@ export function EditorClient({ board }: EditorClientProps) {
 
   if (!Excali) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-           <Loader2 className="w-8 h-8 animate-spin text-foreground/20" />
-           <span className="text-[12px] font-bold tracking-widest text-muted-foreground uppercase opacity-50">Initializing System Architect...</span>
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-[9999]">
+        <div className="relative flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-foreground/10 blur-3xl rounded-full animate-pulse-subtle" />
+            <Loader2 className="w-10 h-10 text-foreground animate-spin relative z-10" />
+          </div>
+          
+          <div className="flex flex-col items-center gap-2">
+            <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase opacity-40">SystemPad Architect</h2>
+            <div className="flex items-center gap-1.5 opacity-30">
+              <div className="w-1 h-1 rounded-full bg-foreground animate-pulse" />
+              <div className="w-1 h-1 rounded-full bg-foreground animate-pulse [animation-delay:0.2s]" />
+              <div className="w-1 h-1 rounded-full bg-foreground animate-pulse [animation-delay:0.4s]" />
+            </div>
+          </div>
         </div>
       </div>
     );

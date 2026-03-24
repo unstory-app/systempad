@@ -1,6 +1,7 @@
 export default function Loading() {
-
-	// Stack uses React Suspense, which will render this page while user data is being fetched.
-	// See: https://nextjs.org/docs/app/api-reference/file-conventions/loading
-	return <></>;
+	return (
+		<div className="fixed top-0 left-0 right-0 h-[2px] z-[9999] overflow-hidden">
+			<div className="h-full bg-foreground/30 animate-shimmer" />
+		</div>
+	);
 }
