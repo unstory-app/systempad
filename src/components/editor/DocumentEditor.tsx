@@ -3,7 +3,9 @@
 import React, { useEffect, useState } from "react";
 
 import { useTheme } from "next-themes";
-import { EditorRoot, EditorContent } from "novel";
+import { EditorRoot, EditorContent, StarterKit, HorizontalRule, Placeholder } from "novel";
+import { handleCommandNavigation } from "novel";
+
 
 interface DocumentEditorProps {
   value: string;
@@ -36,7 +38,14 @@ export function DocumentEditor({ value, onChange, title, onTitleChange }: Docume
          <div className="flex-1 w-full prose-editor-wrapper">
             <EditorRoot>
               <EditorContent
-                 className="flex-1 w-full prose prose-neutral dark:prose-invert max-w-full"
+                 immediatelyRender={false}
+                 extensions={[StarterKit, HorizontalRule, Placeholder.configure({ placeholder: "Start typing..." })]}
+                 className="flex-1 w-full prose prose-neutral dark:prose-invert max-w-full min-h-[500px]"
+                 editorProps={{
+                   handleDOMEvents: {
+                     keydown: (_view, event) => handleCommandNavigation(event),
+                   },
+                 }}
                  initialContent={
                    (() => {
                      if (!value) return undefined;
@@ -47,7 +56,11 @@ export function DocumentEditor({ value, onChange, title, onTitleChange }: Docume
                    })()
                  }
                  onUpdate={({ editor }) => {
-                   onChange(JSON.stringify(editor.getJSON()));
+                   const json = editor.getJSON();
+                   const stringified = JSON.stringify(json);
+                   if (stringified !== value) {
+                     onChange(stringified);
+                   }
                  }}
               />
             </EditorRoot>

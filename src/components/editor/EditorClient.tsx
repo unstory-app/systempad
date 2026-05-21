@@ -28,7 +28,14 @@ import {
   ChevronDown
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useOthers, useUpdateMyPresence, useSelf } from "@liveblocks/react/suspense";
+import { 
+  useOthers, 
+  useUpdateMyPresence, 
+  useSelf, 
+  useStorage, 
+  useMutation 
+} from "@liveblocks/react/suspense";
+import { LiveObject, LiveList, LiveMap } from "@liveblocks/client";
 
 // Helper to generate a consistent color based on standard inputs
 const getUserColor = (id: string) => {
@@ -54,6 +61,7 @@ interface EditorClientProps {
 }
 
 export function EditorClient({ board }: EditorClientProps) {
+  const lastDocSyncRef = React.useRef<string | null>(null);
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const [Excali, setExcali] = useState<any>(null);
@@ -68,7 +76,6 @@ export function EditorClient({ board }: EditorClientProps) {
 
   // Eraser.io Parity Features
   const [viewMode, setViewMode] = useState<"document"|"both"|"canvas">("both");
-  const [documentText, setDocumentText] = useState("");
   const [isIconModalOpen, setIsIconModalOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -81,7 +88,77 @@ export function EditorClient({ board }: EditorClientProps) {
   const updateMyPresence = useUpdateMyPresence();
   const self = useSelf();
 
+  // Multi-Page Storage State
+  const pages = useStorage((root) => root.pages);
+  const activePageId = useStorage((root) => root.activePageId);
+  const activePage = pages?.find((p: any) => p.id === activePageId) || pages?.[0];
+
+  const switchPage = useMutation(({ storage }, id: string) => {
+    storage.set("activePageId", id);
+  }, []);
+
+  const addPage = useMutation(({ storage }, type: "canvas" | "doc") => {
+    const id = Math.random().toString(36).substring(7);
+    const newPage = { id, name: `Untitled ${type === "canvas" ? "Canvas" : "Doc"}`, type };
+    const pages = storage.get("pages");
+    pages.push(newPage);
+    storage.set("activePageId", id);
+    
+    if (type === "canvas") {
+      const canvasData = storage.get("canvasData");
+      canvasData.set(id, new LiveObject({ elements: [], files: {}, appState: {} }));
+    }
+  }, []);
+
+  const deletePage = useMutation(({ storage }, id: string) => {
+    const pages = storage.get("pages");
+    const index = pages.findIndex((p: any) => p.id === id);
+    if (index !== -1 && pages.length > 1) {
+      pages.delete(index);
+      if (storage.get("activePageId") === id) {
+        storage.set("activePageId", pages.get(0).id);
+      }
+    }
+  }, []);
+
+  const updateCanvas = useMutation(({ storage }, elements: readonly any[], appState: any, files: any) => {
+    if (!activePageId) return;
+    const canvasData = storage.get("canvasData");
+    let pageData = canvasData.get(activePageId);
+    if (!pageData) {
+      pageData = new LiveObject({ elements: [], files: {}, appState: {} });
+      canvasData.set(activePageId, pageData);
+    }
+    // Using .set on LiveObject fields for high-performance sync
+    pageData.set("elements", elements);
+    pageData.set("appState", appState);
+    pageData.set("files", files);
+  }, [activePageId]);
+
+  const canvasDataMap = useStorage((root) => root.canvasData);
+  const docDataMap = useStorage((root) => root.docData);
+  const activeCanvasData = useStorage((root) => root.canvasData?.get(activePageId || "") as any, (prev, next) => JSON.stringify(prev) === JSON.stringify(next));
+  const activeDocData = useStorage((root) => root.docData?.get(activePageId || "") as string | undefined);
+
   const [boardName, setBoardName] = useState(board.title);
+
+  const updateDoc = useMutation(({ storage }, content: any) => {
+    if (!activePageId) return;
+    if (content === lastDocSyncRef.current) return;
+    lastDocSyncRef.current = content;
+    const docData = storage.get("docData");
+    docData.set(activePageId, content);
+  }, [activePageId]);
+
+
+
+  const updatePageName = useMutation(({ storage }, id: string, name: string) => {
+    const pages = storage.get("pages");
+    const page = pages.find((p: any) => p.id === id);
+    if (page) page.set("name", name);
+  }, []);
+
+
 
   useEffect(() => {
     // Dynamic import the whole library to be SSR safe
@@ -374,7 +451,7 @@ export function EditorClient({ board }: EditorClientProps) {
               </button>
               
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-popover border border-border shadow-xl rounded-lg overflow-hidden animate-in fade-in zoom-in-95 z-[1000]">
+                <div className="absolute top-full left-0 mt-2 w-48 bg-popover border border-border shadow-xl rounded-lg overflow-hidden animate-in fade-in zoom-in-95 z-1000">
                    <button onClick={handleCopyLink} className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-accent transition-colors">
                      <Share2 className="w-4 h-4" /> Copy Link
                    </button>
@@ -416,61 +493,118 @@ export function EditorClient({ board }: EditorClientProps) {
       </div>
 
       {/* Main Split Interface */}
-      <div className="flex-1 w-full bg-background relative flex">
-        {/* Document Area */}
-        {viewMode !== "canvas" && (
-          <div className={`${viewMode === "both" ? "w-1/3 xl:w-2/5 border-r border-border" : "w-full"} h-full flex flex-col bg-background transition-all duration-300 relative z-40`}>
-             <DocumentEditor 
-                value={documentText} 
-                onChange={setDocumentText} 
-                title={boardName} 
-                onTitleChange={handleNameUpdate} 
-             />
-          </div>
-        )}
+      <div className="flex-1 w-full bg-background relative flex overflow-hidden">
+        {/* Page Sidebar (Left) */}
+        <div className="w-14 sm:w-16 border-r border-border bg-background/50 backdrop-blur-sm flex flex-col items-center py-4 gap-4 z-50">
+           <button 
+             onClick={() => addPage("canvas")}
+             className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all shadow-sm"
+             title="Add New Canvas"
+           >
+             <Layers className="w-5 h-5" />
+           </button>
+           <button 
+             onClick={() => addPage("doc")}
+             className="w-10 h-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center hover:bg-accent/80 transition-all shadow-sm"
+             title="Add New Document"
+           >
+             <Edit3 className="w-5 h-5" />
+           </button>
+           
+           <div className="w-8 h-px bg-border my-2" />
 
-        {/* Canvas Area */}
-        {viewMode !== "document" && (
-          <div className={`${viewMode === "both" ? "w-2/3 xl:w-3/5" : "w-full"} h-full relative transition-all duration-300`}>
-            <Excalidraw
-              excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
-              gridModeEnabled={gridModeEnabled}
-              zenModeEnabled={zenModeEnabled}
-              objectsSnapModeEnabled={objectsSnapModeEnabled}
-              theme={resolvedTheme === "dark" ? "dark" : "light"}
-              collaborators={collaborators}
-              onPointerUpdate={(payload: any) => {
-                updateMyPresence({
-                  cursor: payload.pointer,
-                  button: payload.button,
-                });
-              }}
-              initialData={{
-                elements: board.snapshotJson?.elements || [],
-                appState: {
-                   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-member-access
-                   ...(({ collaborators, ...rest }: any) => rest)(board.snapshotJson?.appState || {}),
-                   theme: resolvedTheme === 'dark' ? 'dark' : 'light',
-                   viewBackgroundColor: resolvedTheme === 'dark' ? '#09090b' : '#ffffff',
-                },
-                files: board.snapshotJson?.files || {},
-              }}
-              onChange={(elements: readonly any[], appState: any, files: any) => {
-                debouncedSave(elements, appState, files, boardName, documentText);
-              }}
-              renderTopLeftUI={renderTopLeftUI}
-              renderTopRightUI={renderTopRightUI}
-              UIOptions={{
-                canvasActions: {
-                  loadScene: false,
-                  saveToActiveFile: false,
-                  toggleTheme: true,
-                  export: { saveFileToDisk: true },
-                },
-                tools: { image: true },
-              }}
-            >
-          <MainMenu>
+           <div className="flex-1 w-full flex flex-col items-center gap-3 overflow-y-auto px-2">
+             {pages?.map((page) => (
+               <div key={page.id} className="group relative">
+                 <button
+                   onClick={() => switchPage(page.id)}
+                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                     activePageId === page.id 
+                       ? "bg-primary text-primary-foreground shadow-md scale-105" 
+                       : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                   }`}
+                   title={page.name}
+                 >
+                   {page.type === "canvas" ? <Grid3X3 className="w-5 h-5" /> : <Info className="w-5 h-5" />}
+                 </button>
+                 {pages.length > 1 && (
+                   <button 
+                     onClick={(e) => { e.stopPropagation(); deletePage(page.id); }}
+                     className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:scale-110 transition-all z-10"
+                   >
+                     <X className="w-3 h-3" />
+                   </button>
+                 )}
+               </div>
+             ))}
+           </div>
+        </div>
+
+        {/* Combined View Logic */}
+        <div className="flex-1 h-full flex overflow-hidden">
+          {/* Document Section */}
+          {(viewMode === "both" || (viewMode === "document" && activePage?.type === "doc")) && (
+            <div className={`${viewMode === "both" ? "w-1/3 xl:w-2/5 border-r border-border" : "w-full"} h-full flex flex-col bg-background transition-all duration-300 relative z-40 overflow-hidden`}>
+               <DocumentEditor 
+                  key={activePageId || "doc-home"}
+                  value={activePage?.type === "doc" ? (activeDocData || "") : (docDataMap?.get(pages?.find((p: any) => p.type === "doc")?.id || "") as string || "")} 
+                  onChange={(val) => {
+                    const docId = activePage?.type === "doc" ? activePage.id : pages?.find((p: any) => p.type === "doc")?.id;
+                    if (docId) updateDoc(val);
+                  }} 
+                  title={activePage?.type === "doc" ? activePage.name : "Linked Document"} 
+                  onTitleChange={(name) => {
+                    const docId = activePage?.type === "doc" ? activePage.id : pages?.find((p: any) => p.type === "doc")?.id;
+                    if (docId) updatePageName(docId, name);
+                  }} 
+               />
+            </div>
+          )}
+
+          {/* Canvas Section */}
+          {(viewMode === "both" || (viewMode === "canvas" && activePage?.type === "canvas")) && (
+            <div className={`${viewMode === "both" ? "w-2/3 xl:w-3/5" : "w-full"} h-full relative transition-all duration-300 overflow-hidden`}>
+              <Excalidraw
+                key={activePageId || "canvas-home"}
+                excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
+                gridModeEnabled={gridModeEnabled}
+                zenModeEnabled={zenModeEnabled}
+                objectsSnapModeEnabled={objectsSnapModeEnabled}
+                theme={resolvedTheme === "dark" ? "dark" : "light"}
+                collaborators={collaborators}
+                onPointerUpdate={(payload: any) => {
+                  updateMyPresence({
+                    cursor: payload.pointer,
+                    button: payload.button,
+                  });
+                }}
+                initialData={{
+                  elements: activeCanvasData?.elements || [],
+                  appState: {
+                     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-member-access
+                     ...(({ collaborators, ...rest }: any) => rest)(activeCanvasData?.appState || {}),
+                     theme: resolvedTheme === 'dark' ? 'dark' : 'light',
+                     viewBackgroundColor: resolvedTheme === 'dark' ? '#09090b' : '#ffffff',
+                  },
+                  files: activeCanvasData?.files || {},
+                }}
+                onChange={(elements: readonly any[], appState: any, files: any) => {
+                  updateCanvas(elements, appState, files);
+                  debouncedSave(elements, appState, files, boardName, activeDocData || "");
+                }}
+                renderTopLeftUI={renderTopLeftUI}
+                renderTopRightUI={renderTopRightUI}
+                UIOptions={{
+                  canvasActions: {
+                    loadScene: false,
+                    saveToActiveFile: false,
+                    toggleTheme: true,
+                    export: { saveFileToDisk: true },
+                  },
+                  tools: { image: true },
+                }}
+              >
+                <MainMenu>
             <MainMenu.DefaultItems.SaveAsImage />
             <MainMenu.DefaultItems.Export />
             <MainMenu.Separator />
@@ -633,7 +767,7 @@ export function EditorClient({ board }: EditorClientProps) {
 
       {/* Eraser.io Parity: Icon Search Modal */}
       {isIconModalOpen && (
-        <div className="absolute inset-0 z-[1000] bg-background/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
+        <div className="absolute inset-0 z-1000 bg-background/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-background border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
              <div className="p-4 border-b border-border flex items-center gap-3 bg-accent/30 relative">
                 <Search className="w-5 h-5 text-muted-foreground ml-2" />
@@ -705,6 +839,7 @@ export function EditorClient({ board }: EditorClientProps) {
         </div>
       )}
     </div>
+  </div>
   );
 }
 

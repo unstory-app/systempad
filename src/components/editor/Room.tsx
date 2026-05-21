@@ -6,6 +6,7 @@ import {
   RoomProvider,
   ClientSideSuspense,
 } from "@liveblocks/react/suspense";
+import { LiveList, LiveMap, LiveObject } from "@liveblocks/client";
 import { Loader2 } from "lucide-react";
 
 export function Room({ 
@@ -17,7 +18,21 @@ export function Room({
 }) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider id={id} initialPresence={{ cursor: null, button: "up" }}>
+      <RoomProvider 
+        id={id} 
+        initialPresence={{ cursor: null, button: "up" }}
+        initialStorage={{
+          pages: new LiveList([
+            { id: "main-canvas", name: "Main Architecture", type: "canvas" },
+            { id: "readme", name: "System Documentation", type: "doc" }
+          ]),
+          activePageId: "main-canvas",
+          canvasData: new LiveMap([
+            ["main-canvas", new LiveObject({ elements: [], files: {}, appState: {} })]
+          ]),
+          docData: new LiveMap()
+        }}
+      >
         <ClientSideSuspense fallback={
           <div className="h-screen w-full flex flex-col items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />

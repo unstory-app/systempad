@@ -1,0 +1,340 @@
+/* CSS for Unified Widget */
+:root {
+    --primary: #ff2d95;
+    --secondary: #a855f7;
+    --track: #444;
+    --text: #fff;
+    --font: 'Poppins', sans-serif;
+    --size: 420px;
+    --stroke: 32px;
+    /* Image Vars */
+    --img-url: none;
+    --img-scale: 50%;
+    --img-offset-y: 0px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--font);
+    background: transparent;
+}
+
+body.dev {
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+#widget-container {
+    position: relative;
+    width: var(--size);
+    height: var(--size);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#main-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    z-index: 1;
+}
+
+#track-path {
+    stroke: var(--track);
+    stroke-width: var(--stroke);
+}
+
+#progress-path {
+    stroke: var(--primary);
+    stroke-width: var(--stroke);
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#glow-path {
+    display: none;
+    stroke: var(--primary);
+    stroke-width: var(--stroke);
+    filter: url(#neon-filter);
+    opacity: 0.6;
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.style-neon #glow-path {
+    display: block;
+}
+
+.style-neon #progress-path,
+.style-neon #glow-path {
+    stroke: url(#main-gradient);
+}
+
+#content-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--text);
+}
+
+/* Custom Image Logic */
+#custom-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + var(--img-offset-y)));
+    width: var(--img-scale);
+    height: var(--img-scale);
+    background-image: var(--img-url);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 1;
+    /* Below text (z-index 2) */
+    pointer-events: none;
+}
+
+#custom-image.hidden {
+    display: none;
+}
+
+/* Text Layouts */
+#title-el {
+    font-size: var(--title-font-size, 24px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 5px;
+}
+
+#value-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+#current-val,
+#goal-val {
+    font-size: 36px;
+    /* Increased size */
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-right: 40px;
+}
+
+#center-percent {
+    font-size: 48px;
+    font-weight: 900;
+    /* Extra bold */
+    display: none;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Mode Overrides */
+
+/* --- Full Circle --- */
+.mode-full #center-percent {
+    display: block;
+    /* Center exactly */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+}
+
+.has-image #center-percent {
+    display: none !important;
+}
+
+.mode-full #text-wrapper {
+    position: absolute;
+    top: 105%;
+    /* Push below center */
+    left: 0;
+    width: 100%;
+    transform: none;
+    /* Reset transform */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* If image present, push text further down/out */
+.mode-full.has-image #text-wrapper {
+    top: auto;
+    bottom: -60px;
+}
+
+/* Center values for Full Circle */
+.mode-full #value-container {
+    justify-content: center;
+    gap: 15px;
+    /* Space around slash */
+}
+
+/* Add Slash Separator */
+.mode-full #current-val::after {
+    content: "/";
+    margin-left: 15px;
+    opacity: 0.7;
+}
+
+/* Remove margins in full mode */
+.mode-full #current-val,
+.mode-full #goal-val {
+    margin-right: 0;
+    text-align: center;
+}
+
+
+/* --- Arches (Semi, Arc75, OpenBottom) --- */
+.mode-semi #widget-container {
+    height: var(--size);
+    align-items: center;
+}
+
+/* Semi: Shift SVG down to make room for Title at top */
+/* Semi: Shift SVG down to make room for Title at top */
+.mode-semi #main-svg {
+    transform: translateY(50px);
+}
+
+/* Position Values just below the endpoints for each shape */
+
+.mode-semi #value-container {
+    position: absolute;
+    bottom: 60px;
+    /* Lowered significantly to clear endpoints */
+    left: 0;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 15px 0 35px;
+    /* Shift Left */
+}
+
+.mode-semi #current-val {
+    text-align: left;
+    color: var(--text-start);
+}
+
+.mode-semi #goal-val {
+    text-align: right;
+    color: var(--text-goal);
+}
+
+/* Default & Top Position for Semi */
+.mode-semi.title-top #title-el {
+    position: absolute;
+    top: 0px;
+    bottom: auto;
+    left: 0;
+    width: 100%;
+}
+
+/* Bottom Position for Semi (User Option) */
+.mode-semi.title-bottom #title-el {
+    position: absolute;
+    top: auto;
+    bottom: 0px;
+    left: 0;
+    width: 100%;
+}
+
+/* Arc/Open: Bottom Center Close Text */
+.mode-arc75 #text-wrapper,
+.mode-openbottom #text-wrapper {
+    position: absolute;
+    bottom: calc(20px + var(--title-offset-y));
+    left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 0px;
+}
+
+.mode-arc75 #value-container,
+.mode-openbottom #value-container {
+    position: relative;
+    width: 100%;
+    justify-content: center;
+    gap: var(--value-gap);
+    padding: 0;
+    bottom: var(--value-offset-y);
+    left: auto;
+}
+
+.mode-arc75 #current-val,
+.mode-openbottom #current-val {
+    text-align: right;
+    color: var(--text-start);
+    margin: 0;
+}
+
+.mode-arc75 #goal-val,
+.mode-openbottom #goal-val {
+    text-align: left;
+    color: var(--text-goal);
+    margin: 0;
+}
+
+.mode-arc75 #title-el,
+.mode-openbottom #title-el {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    text-transform: none;
+    font-size: var(--title-font-size, 20px);
+    bottom: auto;
+    left: auto;
+}
+
+/* Image Positioning Refinement per shape */
+.mode-semi #custom-image {
+    bottom: 0px;
+    top: auto;
+    transform: translate(-50%, calc(0% + var(--img-offset-y)));
+}
+
+.mode-openbottom #custom-image,
+.mode-arc75 #custom-image {
+    top: 50%;
+    transform: translate(-50%, calc(-50% + var(--img-offset-y)));
+}
+
+/* Push image down slightly in arch */
+
+/* Dev Controls */
+#dev-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 8px;
+    color: #fff;
+    z-index: 999;
+}
+
+#dev-controls.hidden {
+    display: none;
+}

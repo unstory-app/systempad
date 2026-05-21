@@ -24,6 +24,15 @@ declare global {
       cursor: { x: number; y: number } | null;
       button: "up" | "down";
     };
+
+    // Custom storage properties (LiveList, LiveMap, etc.)
+    Storage: {
+      pages: any; // LiveList<{ id: string, name: string, type: "canvas" | "doc" }>
+      activePageId: string | null;
+      // We store the data for each page in a Map keyed by pageId
+      canvasData: any; // LiveMap<string, LiveObject<{ elements: any[], files: any, appState: any }>>
+      docData: any; // LiveMap<string, any>
+    };
     
     // Custom events, for useBroadcastEvent, useEventListener
     RoomEvent: Record<string, never>;

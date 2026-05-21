@@ -1,0 +1,203 @@
+{
+  "section_appearance": {
+    "type": "header",
+    "label": "🎨 Widget Shape & Style"
+  },
+  "shapeMode": {
+    "type": "dropdown",
+    "label": "Widget Shape",
+    "value": "semi",
+    "options": {
+      "full": "Full Circle (360°)",
+      "semi": "Semi Circle (180° Arch)",
+      "arc75": "Wide Arc (270°)",
+      "openbottom": "Open Bottom (Horseshoe)"
+    },
+    "group": "Appearance"
+  },
+  "styleMode": {
+    "type": "dropdown",
+    "label": "Style Mode",
+    "value": "neon",
+    "options": {
+      "solid": "Solid Color",
+      "neon": "Gradient + Neon Glow"
+    },
+    "group": "Appearance"
+  },
+  "widgetSize": {
+    "type": "slider",
+    "label": "Global Scale (px)",
+    "value": 420,
+    "min": 200,
+    "max": 800,
+    "step": 10,
+    "group": "Appearance"
+  },
+  "section_colors": {
+    "type": "header",
+    "label": "🌈 Color Settings"
+  },
+  "primaryColor": {
+    "type": "colorpicker",
+    "label": "Primary Color (Gradient Start)",
+    "value": "#ff2d95",
+    "group": "Colors"
+  },
+  "secondaryColor": {
+    "type": "colorpicker",
+    "label": "Secondary Color (Gradient End)",
+    "value": "#a855f7",
+    "group": "Colors"
+  },
+  "trackColor": {
+    "type": "colorpicker",
+    "label": "Track Background Color",
+    "value": "#5a5a5a",
+    "group": "Colors"
+  },
+  "glowColor": {
+    "type": "colorpicker",
+    "label": "Neon Glow Color",
+    "value": "rgba(255, 45, 149, 0.6)",
+    "group": "Colors"
+  },
+  "textColor": {
+    "type": "colorpicker",
+    "label": "Text/Number Color",
+    "value": "#ffffff",
+    "group": "Colors"
+  },
+  "startValueColor": {
+    "type": "colorpicker",
+    "label": "Start Value Color (0)",
+    "value": "#ff2d95",
+    "group": "Colors"
+  },
+  "goalValueColor": {
+    "type": "colorpicker",
+    "label": "Goal Value Color (100)",
+    "value": "#a855f7",
+    "group": "Colors"
+  },
+  "section_content": {
+    "type": "header",
+    "label": "📝 Text & Content"
+  },
+  "titleText": {
+    "type": "text",
+    "label": "Title Text",
+    "value": "SUBSCRIPTIONS",
+    "group": "Content"
+  },
+  "fontFamily": {
+    "type": "googleFont",
+    "label": "Font Family",
+    "value": "Poppins",
+    "group": "Content"
+  },
+  "currencySymbol": {
+    "type": "text",
+    "label": "Prefix (e.g. $)",
+    "value": "",
+    "group": "Content"
+  },
+  "titleFontSize": {
+    "type": "slider",
+    "label": "Title Font Size",
+    "value": 24,
+    "min": 10,
+    "max": 100,
+    "step": 1,
+    "group": "Content"
+  },
+  "titleOffsetY": {
+    "type": "slider",
+    "label": "Title Vertical Offset",
+    "value": 0,
+    "min": -200,
+    "max": 200,
+    "step": 5,
+    "group": "Content"
+  },
+  "valueOffsetY": {
+    "type": "slider",
+    "label": "Value Vertical Offset",
+    "value": 0,
+    "min": -200,
+    "max": 200,
+    "step": 5,
+    "group": "Content"
+  },
+  "valueGap": {
+    "type": "slider",
+    "label": "Value Horizontal Gap",
+    "value": 80,
+    "min": 0,
+    "max": 300,
+    "step": 5,
+    "group": "Content"
+  },
+  "section_image": {
+    "type": "header",
+    "label": "🖼️ Center Image"
+  },
+  "imageUrl": {
+    "type": "image-input",
+    "label": "Center Image (Optional)",
+    "group": "Image"
+  },
+  "imageSize": {
+    "type": "slider",
+    "label": "Image Scale (%)",
+    "value": 50,
+    "min": 10,
+    "max": 100,
+    "step": 1,
+    "group": "Image"
+  },
+  "imageOffsetY": {
+    "type": "slider",
+    "label": "Image Vertical Offset",
+    "value": 0,
+    "min": -100,
+    "max": 100,
+    "step": 5,
+    "group": "Image"
+  },
+  "section_data": {
+    "type": "header",
+    "label": "📊 Goal Settings"
+  },
+  "goalValue": {
+    "type": "number",
+    "label": "Goal Target Amount",
+    "value": 100,
+    "group": "Goal Data"
+  },
+  "startingValue": {
+    "type": "number",
+    "label": "Starting Progress",
+    "value": 0,
+    "group": "Goal Data"
+  },
+  "eventType": {
+    "type": "dropdown",
+    "label": "Event Type",
+    "value": "subscriber",
+    "options": {
+      "follower": "Followers",
+      "subscriber": "Subscribers",
+      "tip": "Tips/Donations",
+      "cheer": "Bits/Cheers",
+      "manual": "Manual Only"
+    },
+    "group": "Goal Data"
+  },
+  "enableCommands": {
+    "type": "checkbox",
+    "label": "Enable Chat Commands",
+    "value": true,
+    "group": "Behavior"
+  }
+}
